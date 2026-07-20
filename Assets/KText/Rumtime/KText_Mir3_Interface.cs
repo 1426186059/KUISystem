@@ -9,7 +9,6 @@
 //
 // ============================================================================
 using UnityEngine;
-using UnityEngine.UI;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
@@ -20,16 +19,8 @@ namespace KText
     /// </summary>
     public enum KTextMir3Version
     {
-        /// <summary>Camera.Render → ReadPixels → BGRA buffer</summary>
-        Version1,
-        /// <summary>纯 CPU 软件光栅化 → BGRA buffer</summary>
-        Version2,
         /// <summary>纯 CPU 软件光栅化（四角 UV 双线性映射）→ BGRA buffer</summary>
         Version3,
-        /// <summary>GUI.Label 立即绘制（buf 参数忽略）</summary>
-        GUI,
-        /// <summary>UGUI Text 组件 + Camera.Render → BGRA buffer</summary>
-        UGUI,
     }
 
     /// <summary>
@@ -55,34 +46,9 @@ namespace KText
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
-            switch (ActiveVersion)
-            {
-                case KTextMir3Version.Version1:
-                    KText_Mir3_Version1.DrawText(buf, bufW, bufH, stride,
-                        text, font, fontSize, style,
-                        x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
-                    break;
-                case KTextMir3Version.Version2:
-                    KText_Mir3_Version2.DrawText(buf, bufW, bufH, stride,
-                        text, font, fontSize, style,
-                        x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
-                    break;
-                case KTextMir3Version.Version3:
-                    KText_Mir3_Version3.DrawText(buf, bufW, bufH, stride,
-                        text, font, fontSize, style,
-                        x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
-                    break;
-                case KTextMir3Version.GUI:
-                    KText_GUI.DrawText(
-                        text, font, fontSize, style,
-                        x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
-                    break;
-                case KTextMir3Version.UGUI:
-                    KText_UGUI.Instance.DrawText(buf, bufW, bufH, stride,
-                        text, font, fontSize, style,
-                        x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
-                    break;
-            }
+            KText_Mir3_Version3.DrawText(buf, bufW, bufH, stride,
+                text, font, fontSize, style,
+                x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
         }
 
         /// <summary>
@@ -107,26 +73,8 @@ namespace KText
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
-            switch (ActiveVersion)
-            {
-                case KTextMir3Version.Version1:
-                    return KText_Mir3_Version1.MeasureText(text, font, fontSize, style,
-                        maxWidth, anchor, hWrap, vWrap);
-                case KTextMir3Version.Version2:
-                    return KText_Mir3_Version2.MeasureText(text, font, fontSize, style,
-                        maxWidth, anchor, hWrap, vWrap);
-                case KTextMir3Version.Version3:
-                    return KText_Mir3_Version3.MeasureText(text, font, fontSize, style,
-                        maxWidth, anchor, hWrap, vWrap);
-                case KTextMir3Version.GUI:
-                    return KText_GUI.MeasureText(text, font, fontSize, style,
-                        maxWidth, anchor, hWrap, vWrap);
-                case KTextMir3Version.UGUI:
-                    return KText_UGUI.Instance.MeasureText(text, font, fontSize, style,
-                        maxWidth, anchor, hWrap, vWrap);
-                default:
-                    return Vector2.zero;
-            }
+            return KText_Mir3_Version3.MeasureText(text, font, fontSize, style,
+                maxWidth, anchor, hWrap, vWrap);
         }
     }
 }

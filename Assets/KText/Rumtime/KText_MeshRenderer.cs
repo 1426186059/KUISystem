@@ -23,7 +23,6 @@
 // ============================================================================
 
 using UnityEngine;
-using UnityEngine.UI;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 

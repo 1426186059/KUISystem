@@ -11,6 +11,17 @@ using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText
 {
+    public static class GameObjectExtensions
+    {
+        public static T AddMissComponent<T>(this GameObject go) where T : Component
+        {
+            var comp = go.GetComponent<T>();
+            if (comp == null)
+                comp = go.AddComponent<T>();
+            return comp;
+        }
+    }
+
     /// <summary>
     /// 共用工具类，提供字体加载、TextGenerator 布局、Mesh 构建、文本测量。
     /// 所有 4 个渲染版本均依赖此类。
