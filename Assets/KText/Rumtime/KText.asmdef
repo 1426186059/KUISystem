@@ -1,0 +1,21 @@
+{
+    "name": "KText",
+    "rootNamespace": "KText",
+    "references": [],
+    "includePlatforms": [
+        "Editor",
+        "WindowsStandalone64",
+        "macOSStandalone",
+        "LinuxStandalone64",
+        "iOS",
+        "Android"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

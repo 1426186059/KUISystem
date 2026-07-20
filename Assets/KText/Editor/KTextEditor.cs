@@ -2,8 +2,10 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-public class KTextEditor : EditorWindow
+namespace KText.Editor
 {
+    public class KTextEditor : EditorWindow
+    {
     private Font _font;
     private int _fontSize = 32;
     private string _bakeText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{};:,.<>?/ ";
@@ -242,5 +244,6 @@ public class KTextEditor : EditorWindow
         result.SetPixels32(pixels);
         result.Apply();
         return result;
+    }
     }
 }
