@@ -55,15 +55,24 @@ namespace KText
         /// 按名称加载字体。优先从 Resources/Fonts/ 加载，找不到则返回默认字体。
         /// 结果会缓存到 _fontCache。
         /// </summary>
-        public static UFont Load(string name = null)
+        public static UFont Load(string name = null, int FontSize = 30)
         {
             UFont f = null;
             if (!string.IsNullOrEmpty(name))
             {
                 if (!_fontCache.TryGetValue(name, out f))
                 {
-                    f = Resources.Load<UFont>("Fonts/" + name);
-                    if (f != null) _fontCache[name] = f;
+                    f = Font.CreateDynamicFontFromOSFont(name, FontSize);
+                    if (f == null)
+                    {
+                        f = Resources.Load<UFont>("Fonts/" + name);
+                    }
+
+                    if (f != null)
+                    {
+                        Debug.Log("Current Load Font: " + f.name);
+                        _fontCache[name] = f;
+                    }
                 }
                 _fontCache.TryGetValue(name, out f);
             }
@@ -75,7 +84,10 @@ namespace KText
             get
             {
                 if (_defaultFont == null)
+                {
                     _defaultFont = Resources.GetBuiltinResource<UFont>("LegacyRuntime.ttf");
+                    Debug.Log("Current Load Font: " + _defaultFont.name);
+                }
                 return _defaultFont;
             }
         }

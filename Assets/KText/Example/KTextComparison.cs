@@ -38,7 +38,7 @@ namespace KText.Example
         {
             if (FontAsset == null)
             {
-                FontAsset = KTextCommon.Load(FontName);
+                FontAsset = KTextCommon.Load(FontName, FontSize);
             }
 
             _whiteTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
