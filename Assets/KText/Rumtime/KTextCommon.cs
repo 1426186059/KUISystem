@@ -6,6 +6,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
@@ -62,12 +64,7 @@ namespace KText
             {
                 if (!_fontCache.TryGetValue(name, out f))
                 {
-                    f = Font.CreateDynamicFontFromOSFont(name, FontSize);
-                    if (f == null)
-                    {
-                        f = Resources.Load<UFont>("Fonts/" + name);
-                    }
-
+                    f = InnerLoadFont(name, FontSize);
                     if (f != null)
                     {
                         Debug.Log("Current Load Font: " + f.name);
@@ -77,6 +74,22 @@ namespace KText
                 _fontCache.TryGetValue(name, out f);
             }
             return f ?? DefaultFont;
+        }
+
+        private static UFont InnerLoadFont(string name = null, int FontSize = 0)
+        {
+            UFont f = null;
+            string[] fontNames = Font.GetOSInstalledFontNames();
+            if (fontNames != null && fontNames.Contains(name))
+            {
+                f = Font.CreateDynamicFontFromOSFont(name, FontSize);
+            }
+
+            if (f == null)
+            {
+                f = Resources.Load<UFont>("Fonts/" + name);
+            }
+            return f;
         }
 
         private static UFont DefaultFont
