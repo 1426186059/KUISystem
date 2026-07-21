@@ -20,6 +20,7 @@ namespace KText.Example
         public VerticalWrapMode VerticalWrap = VerticalWrapMode.Overflow;
 
         public UFont FontAsset;
+        public string FontName;
 
         private const int PanelW = 420;
         private const int PanelH = 120;
@@ -35,13 +36,16 @@ namespace KText.Example
 
         private void Start()
         {
-            var font = FontAsset ?? KTextCommon.LoadDefault();
+            if (FontAsset == null)
+            {
+                FontAsset = KTextCommon.Load(FontName);
+            }
 
             _whiteTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             _whiteTex.SetPixel(0, 0, Color.white);
             _whiteTex.Apply(false);
 
-            RenderMir3V3(font);
+            RenderMir3V3(FontAsset);
         }
 
         private void OnDestroy()

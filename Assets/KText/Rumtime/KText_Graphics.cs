@@ -68,7 +68,7 @@ namespace KText
             // 确保材质就绪
             if (_mat == null)
             {
-                _mat = new Material(Shader.Find("KText/Font"));
+                _mat = KTextCommon.CreateMaterial();
                 _mat.hideFlags = HideFlags.HideAndDontSave;
             }
             _mat.mainTexture = atlasTex;

@@ -4,6 +4,7 @@
 //[6, 7, 8, 9, 10, 11]
 //[0, 1, 2, 3, 4, 5]
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UFont = UnityEngine.Font;
@@ -328,6 +329,11 @@ namespace KText
 
             _atlasCache[key] = result;
             return result;
+        }
+
+        public static Material CreateMaterial()
+        {
+            return new Material(Shader.Find("GUI/Text Shader"));
         }
 
     }

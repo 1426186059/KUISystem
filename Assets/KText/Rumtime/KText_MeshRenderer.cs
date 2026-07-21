@@ -68,7 +68,7 @@ namespace KText
             if (mr.sharedMaterial == null || mr.sharedMaterial.shader == null
                 || mr.sharedMaterial.shader.name != "KText/Scene")
             {
-                mr.sharedMaterial = new Material(Shader.Find("GUI/Text Shader"));
+                mr.sharedMaterial = KTextCommon.CreateMaterial();
             }
             mr.sharedMaterial.color = TextColor;
 
