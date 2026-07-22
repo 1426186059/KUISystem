@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!129 &1
+--- !u!29 &-1
 OcclusionCullingSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -10,7 +10,7 @@ OcclusionCullingSettings:
     backfaceThreshold: 100
   m_SceneGUID: 00000000000000000000000000000000
   m_OcclusionCullingData: {fileID: 0}
---- !u!157 &2
+--- !u!104 &1
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
@@ -18,34 +18,31 @@ RenderSettings:
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.01
-  m_LinearFogNear: 0
-  m_LinearFogFar: 300
-  m_FogStart: 0
-  m_FogEnd: 300
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-  m_AmbientLight: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 0
-  m_SubtractiveShadowColor: {r: 0.42, g: 0.48, b: 0.57, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
-  m_SpotCookie: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
---- !u!196 &3
+--- !u!157 &2
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -64,33 +61,47 @@ LightmapSettings:
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
     m_FinalGather: 0
     m_FinalGatherFiltering: 1
-    m_IndirectDenoiser: 1
-    m_DirectDenoiser: 0
-    m_EnvironmentImportanceSampling: 0
-    m_AlbedoBoostEnabled: 1
-    m_FilterMode: 1
-    m_AOFilterMode: 1
-    m_AOFiltering: 1
-    m_Denoising: 1
-    m_Dilate: 1
-    m_TemporalCoherence: 1
-    m_BakeBackend: 0
-    m_PVRSamplerSize: 256
-    m_PVRSamplerCount: 256
+    m_FinalGatherRayCount: 256
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 1
+    m_PVRSampling: 1
     m_PVRDirectSampleCount: 32
     m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 5
+    m_PVRFilteringGaussRadiusAO: 2
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_LightingSettings: {fileID: 0}
---- !u!184 &4
+--- !u!196 &3
 NavMeshSettings:
-  m_ObjectHideFlags: 0
   serializedVersion: 2
+  m_ObjectHideFlags: 0
   m_BuildSettings:
     serializedVersion: 3
     agentTypeID: 0
@@ -101,17 +112,16 @@ NavMeshSettings:
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
     minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accurateTerrainPatches: 1
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
-  m_NavMeshBuildTime: 0
-  m_ConvexRegionPreset: 0
-  m_LegacyBakeData: {fileID: 0}
-  m_NavMeshBuildDebugSettings:
-    m_Flags: 0
 --- !u!1 &1001
 GameObject:
   m_ObjectHideFlags: 0
@@ -136,12 +146,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1001}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1003
 MonoBehaviour:
@@ -155,13 +166,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3a9c1b2e7d9486a9b0c1d2e3f4a5b6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  FontAsset: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  FontName: msyh
   FontSize: 26
+  LineCount: 50
   CellHeight: 46
   PanelWidth: 760
-  LeftColumn: 220
-  RowSpacing: 8
   TextColor: {r: 1, g: 1, b: 1, a: 1}
   Anchor: 4
+  Texts: []
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
@@ -187,12 +200,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &2003
 Camera:
@@ -202,276 +216,49 @@ Camera:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
   m_Enabled: 1
+  serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
-  m_FOV: 60
-  m_NearClipPlane: 0.3
-  m_FarClipPlane: 1000
-  m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
-  m_Orthographic: 0
-  m_OrthographicSize: 5
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShiftMode: 0
-  m_SensorFit: 2
-  m_AllowDynamicResolution: 0
-  m_AllowMSAA: 0
-  m_AllowHDR: 1
-  m_AllowXRRendering: 1
-  m_ForceIntoRT: 0
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
-  m_TemporalClip: 0
-  m_NearPlaneEvents: 0
-  m_UseOcclusionCulling: 1
-  m_OcclusionCulling: 1
-  m_StereoMirrorMode: 0
-  m_CameraType: 0
-  m_CameraUsageFlags: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_UsePhysicalProperties: 0
-  m_BlendDistance: 0.1
-  m_RendererPriority: 0
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 2001}
-  m_Aperture: 1.4
+  m_FOVAxisMode: 0
+  m_Iso: 200
   m_ShutterSpeed: 0.005
-  m_ISO: 200
-  m_ExposureCompensation: 0
+  m_Aperture: 1.4
   m_FocusDistance: 10
-  m_FocalLengthInMillis: 50
-  m_MinimumAperture: 3.9
-  m_MaximumAperture: 22
-  m_ApertureBladeCount: 5
-  m_ExposureCurveMap: {fileID: 0}
-  m_ExposureClipRange: {x: 0, y: 100}
-  m_TransparencySortMode: 0
-  m_TransparencySortAxis: {x: 0, y: 0, z: 1}
-  m_UseTransparencySortAxis: 0
-  m_RequireDepthTexture: 0
-  m_RequireOpaqueTexture: 0
-  m_RendererColorAdjustmentsEnabled: 0
-  m_RendererFinalPostProcessingEnabled: 1
-  m_RendererAllowColorGradingWithDelayedToneMapping: 0
-  m_RendererForceDisableToneMapping: 0
-  m_RendererAllowToneMappingWhenPostProcessingDisabled: 0
-  m_RendererAllowWhitePointControl: 0
-  m_RendererAllowColorTemperatureControl: 0
-  m_RendererAllowShadowsRemoval: 0
-  m_RendererAllowRescaling: 0
-  m_RendererAllowGlobalChromaticAberration: 0
-  m_RendererAllowVignette: 0
-  m_RendererAllowLut: 0
-  m_RendererAllowFilmGrain: 0
-  m_RendererAllowTemporalAA: 0
-  m_RendererMotionVecForDepth: 0
-  m_RendererMotionalVecForTransparent: 0
-  m_RendererCustomColorAdapter: {fileID: 0}
-  m_RendererCustomColorGradingLut: {fileID: 0}
-  m_RendererCustomFilmGrain: {fileID: 0}
-  m_RendererCustomLut: {fileID: 0}
-  m_RendererCustomChromaticAberration: {fileID: 0}
-  m_RendererCustomVignette: {fileID: 0}
-  m_RendererCustomTemporalAA: {fileID: 0}
-  m_RendererDiffusionProfileOverride: {fileID: 0}
-  m_OpaqueTextureDownsampling: 1
-  m_RendererHiQualitySampling: 0
-  m_RendererProbesDefault: 0
-  m_RendererProbesCustom: 0
-  m_RendererProbesAnchorOverride: {fileID: 0}
-  m_RendererProbesVolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_RendererProbesVolumeTrigger: {fileID: 0}
-  m_RendererProbesVolumeUpdateFrequency: 0
-  m_RendererProbesNeedRetetrahedralize: 0
-  m_RendererProbesMode: 0
-  m_RendererProbesUseSceneProxy: 1
-  m_RendererProbesWeight: 1
-  m_RendererProbesMultiplier: 1
-  m_RendererProbesUseStandardShader: 1
-  m_RendererProbesOverride: 0
-  m_RendererProbesCustom: 0
-  m_RendererProbesCustomAsset: {fileID: 0}
-  m_RendererUseForwardPlus: 0
-  m_RendererAccurateGbufferNormals: 1
-  m_RendererLitShaderMode: 0
-  m_RendererClustered: 1
-  m_RendererUseLightLayers: 0
-  m_RendererDeferredAdditionalLights: 1
-  m_RendererUseClustered: 0
-  m_RendererUseSplitLighting: 0
-  m_RendererUseRayTracing: 0
-  m_RendererUseLightCookies: 0
-  m_RendererUseShadowMask: 0
-  m_RendererUseLightProbes: 1
-  m_RendererUseScreenSpaceShadows: 0
-  m_RendererUseMsaa: 0
-  m_RendererUseTiled: 1
-  m_RendererUseClusteredShadows: 1
-  m_RendererUseClusteredShadows2: 0
-  m_RendererUseForwardPlus2: 0
-  m_RendererUseMixedLighting: 1
-  m_RendererDeferredShading: 1
-  m_RendererUseComputeShaderForBlits: 0
-  m_RendererUseTextureArrayForShadows: 1
-  m_RendererUseTextureArrayForLightProbes: 1
-  m_RendererUseTextureArrayForLightCookies: 0
-  m_RendererUseTextureArrayForAPV: 1
-  m_RendererUseClusteredForProbeVolume: 1
-  m_PostProcessLayer: {fileID: 0}
-  m_PostProcessLayer2: {fileID: 0}
-  m_PostProcessData: {fileID: 0}
-  m_PostProcessData2: {fileID: 0}
-  m_SceneColorMapping: 0
-  m_SceneDepthMapping: 0
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
   m_Depth: 0
-  m_CullingMatrixOverride:
-    e00: 1
-    e10: 0
-    e20: 0
-    e30: 0
-    e01: 0
-    e11: 1
-    e21: 0
-    e31: 0
-    e02: 0
-    e12: 0
-    e22: 1
-    e32: 0
-    e03: 0
-    e13: 0
-    e23: 0
-    e33: 1
-  m_ProjectionMatrixOverride:
-    e00: 1
-    e10: 0
-    e20: 0
-    e30: 0
-    e01: 0
-    e11: 1
-    e21: 0
-    e31: 0
-    e02: 0
-    e12: 0
-    e22: 1
-    e32: 0
-    e03: 0
-    e13: 0
-    e23: 0
-    e33: 1
-  m_StereoConvergenceSetup: 10
-  m_StereoSeparationSetup: 0.022
-  m_StereoMirrorModeSetup: 0
-  m_UseOcclusionCullingSetup: 1
-  m_HDR: 1
-  m_AllowMSAASetup: 0
-  m_ForceIntoRTSetup: 0
-  m_AllowDynamicResolutionSetup: 0
-  m_AllowXRRenderingSetup: 1
-  m_StereoConvergence2: 10
-  m_StereoSeparation2: 0.022
-  m_StereoMirrorMode2: 0
-  m_UseOcclusionCulling2: 1
-  m_OcclusionCulling2: 1
-  m_HDR2: 1
-  m_AllowMSAA2: 0
-  m_ForceIntoRT2: 0
-  m_AllowDynamicResolution2: 0
-  m_AllowXRRendering2: 1
-  m_ClearStencil: 1
-  m_ClearStencilValue: 0
-  m_CullingMask2:
+  m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RendererColorAdjustmentsEnabled2: 0
-  m_RendererFinalPostProcessingEnabled2: 1
-  m_RendererAllowColorGradingWithDelayedToneMapping2: 0
-  m_RendererForceDisableToneMapping2: 0
-  m_RendererAllowToneMappingWhenPostProcessingDisabled2: 0
-  m_RendererAllowWhitePointControl2: 0
-  m_RendererAllowColorTemperatureControl2: 0
-  m_RendererAllowShadowsRemoval2: 0
-  m_RendererAllowRescaling2: 0
-  m_RendererAllowGlobalChromaticAberration2: 0
-  m_RendererAllowVignette2: 0
-  m_RendererAllowLut2: 0
-  m_RendererAllowFilmGrain2: 0
-  m_RendererAllowTemporalAA2: 0
-  m_RendererMotionVecForDepth2: 0
-  m_RendererMotionalVecForTransparent2: 0
-  m_RendererCustomColorAdapter2: {fileID: 0}
-  m_RendererCustomColorGradingLut2: {fileID: 0}
-  m_RendererCustomFilmGrain2: {fileID: 0}
-  m_RendererCustomLut2: {fileID: 0}
-  m_RendererCustomChromaticAberration2: {fileID: 0}
-  m_RendererCustomVignette2: {fileID: 0}
-  m_RendererCustomTemporalAA2: {fileID: 0}
-  m_RendererDiffusionProfileOverride2: {fileID: 0}
-  m_OpaqueTextureDownsampling2: 1
-  m_RendererHiQualitySampling2: 0
-  m_RendererProbesDefault2: 0
-  m_RendererProbesCustom2: 0
-  m_RendererProbesAnchorOverride2: {fileID: 0}
-  m_RendererProbesVolumeLayerMask2:
-    serializedVersion: 2
-    m_Bits: 1
-  m_RendererProbesVolumeTrigger2: {fileID: 0}
-  m_RendererProbesVolumeUpdateFrequency2: 0
-  m_RendererProbesNeedRetetrahedralize2: 0
-  m_RendererProbesMode2: 0
-  m_RendererProbesUseSceneProxy2: 1
-  m_RendererProbesWeight2: 1
-  m_RendererProbesMultiplier2: 1
-  m_RendererProbesUseStandardShader2: 1
-  m_RendererProbesOverride2: 0
-  m_RendererProbesCustom2: 0
-  m_RendererProbesCustomAsset2: {fileID: 0}
-  m_RendererUseForwardPlus2: 0
-  m_RendererAccurateGbufferNormals2: 1
-  m_RendererLitShaderMode2: 0
-  m_RendererClustered2: 1
-  m_RendererUseLightLayers2: 0
-  m_RendererDeferredAdditionalLights2: 1
-  m_RendererUseClustered2_2: 0
-  m_RendererUseSplitLighting2: 0
-  m_RendererUseRayTracing2: 0
-  m_RendererUseLightCookies2: 0
-  m_RendererUseShadowMask2: 0
-  m_RendererUseLightProbes2: 1
-  m_RendererUseScreenSpaceShadows2: 0
-  m_RendererUseMsaa2: 0
-  m_RendererUseTiled2: 1
-  m_RendererUseClusteredShadows2_2: 1
-  m_RendererUseClusteredShadows2_3: 0
-  m_RendererUseForwardPlus2_2: 0
-  m_RendererUseMixedLighting2: 1
-  m_RendererDeferredShading2: 1
-  m_RendererUseComputeShaderForBlits2: 0
-  m_RendererUseTextureArrayForShadows2: 1
-  m_RendererUseTextureArrayForLightProbes2: 1
-  m_RendererUseTextureArrayForLightCookies2: 0
-  m_RendererUseTextureArrayForAPV2: 1
-  m_RendererUseClusteredForProbeVolume2: 1
-  m_PostProcessLayer3: {fileID: 0}
-  m_PostProcessLayer4: {fileID: 0}
-  m_PostProcessData3: {fileID: 0}
-  m_PostProcessData4: {fileID: 0}
-  m_SceneColorMapping2: 0
-  m_SceneDepthMapping2: 0
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 0
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
 --- !u!81 &2004
 AudioListener:
   m_ObjectHideFlags: 0
@@ -480,11 +267,9 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
   m_Enabled: 1
-  m_VolumeUpdateMode: 0
-  m_SpatializerPlugin: 
-  m_AmbisonicPlugin: 
---- !u!29 &-1
+--- !u!1660057539 &9223372036854775807
 SceneRoots:
+  m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1002}
   - {fileID: 2002}

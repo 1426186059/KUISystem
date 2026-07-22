@@ -6,110 +6,119 @@ using UFontStyle = UnityEngine.FontStyle;
 namespace KText.Example
 {
     /// <summary>
-    /// 例子 2：利用 KText_Mir3_Version3（纯 CPU 软件光栅化）批量渲染 50 种字体。
-    /// 每个字体显示不同的中英文混合文字，并可通过滚动视图浏览 / 随机切换文字。
+    /// 例子 2：使用 KText_Mir3_Version3（纯 CPU 光栅化）以【同一个字体】渲染 50 行文字，
+    /// 每行显示不同的中英文混合内容。字体在 Inspector 中暴露，可随时更换（含编辑模式预览）。
     /// </summary>
+    [ExecuteInEditMode]
     public class KText50Fonts : MonoBehaviour
     {
-        private const int MaxFonts = 50;
+        [Header("字体（Inspector 中可随时更换，所有行共用同一字体）")]
+        public UFont FontAsset;
+        public string FontName = "msyh";
 
+        [Header("渲染设置")]
         public int FontSize = 26;
-        public int CellHeight = 46;
+        public int LineCount = 50;
+        public int CellHeight = 44;
         public int PanelWidth = 760;
-        public float LeftColumn = 220f;
-        public float RowSpacing = 8f;
         public Color TextColor = Color.white;
         public TextAnchor Anchor = TextAnchor.MiddleLeft;
 
-        // 中英文混合文字池，用于"任意显示不同的文字"
-        private static readonly string[] SampleTexts =
+        [Header("自定义文字（每条一行；留空则该行自动生成混排文字）")]
+        [TextArea(1, 3)]
+        public string[] Texts;
+
+        // 中英文词库，用于自动生成互不相同的混排文字
+        private static readonly string[] Cn =
         {
-            "中文 English 测试 KText 渲染",
-            "Hello World 你好世界 123",
-            "传奇 Mir3 字体展示 Font",
-            "Unity 字体渲染 中英文混排",
-            "The quick brown fox 快速的狐狸",
-            "KText 性能测试 Performance 50",
-            "风云变幻 龙争虎斗 Dragon",
-            "日落西山 英雄迟暮 Sunset",
-            "剑气纵横 三万里 Sword",
-            "明月几时有 把酒问青天 Moon",
-            "ABCDEFG 一二三四五 67890",
-            "代码 Code 与诗 Poetry 之间",
+            "传奇", "风云", "龙吟", "剑气", "明月", "江湖", "天涯", "英雄", "青山", "流水",
+            "星河", "战旗", "铁血", "逍遥", "苍穹", "幻境", "王者", "荣耀", "清风", "落霞",
+        };
+        private static readonly string[] En =
+        {
+            "Mir3", "KText", "Dragon", "Hero", "Sword", "Moon", "Sky", "Wind", "Fire", "Star",
+            "Legend", "Quest", "Realm", "Storm", "Shadow", "Light", "Brave", "Echo", "Nova", "Zen",
         };
 
-        private class Item
+        private class Line
         {
-            public string FontName;
-            public UFont Font;
-            public Texture2D Texture;
             public string Text;
+            public Texture2D Texture;
         }
 
-        private readonly List<Item> _items = new List<Item>();
+        private readonly List<Line> _lines = new List<Line>();
         private Texture2D _bgTex;
         private GUIStyle _labelStyle;
         private Vector2 _scroll;
         private System.Random _rnd = new System.Random();
+        private UFont _lastFont;
         private int _lastFontSize;
+        private int _lastLineCount;
 
-        private void Start()
+        private void OnEnable() { Init(); }
+
+        private void Init()
         {
-            _bgTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-            _bgTex.SetPixel(0, 0, Color.white);
-            _bgTex.Apply(false);
-
-            _labelStyle = new GUIStyle(GUI.skin.label)
+            if (_bgTex == null)
             {
-                fontSize = 16,
-                fontStyle = FontStyle.Bold,
-            };
-            _labelStyle.normal.textColor = new Color(0.6f, 0.85f, 1f);
+                _bgTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                _bgTex.SetPixel(0, 0, Color.white);
+                _bgTex.Apply(false);
+            }
+            RebuildIfNeeded(true);
+        }
 
+        private UFont GetFont()
+        {
+            if (FontAsset != null) return FontAsset;
+            return KTextCommon.Load(FontName, FontSize);
+        }
+
+        private string GenerateText(int i)
+        {
+            int a = i % Cn.Length;
+            int b = (i * 7 + 3) % Cn.Length;
+            int c = (i * 3 + 1) % En.Length;
+            int d = (i * 5 + 2) % En.Length;
+            return $"{i + 1,2}. {Cn[a]}{Cn[b]} {En[c]} · {En[d]} 中文English混排 {i + 1}";
+        }
+
+        private void RebuildIfNeeded(bool force = false)
+        {
+            var font = GetFont();
+            if (!force && font == _lastFont && FontSize == _lastFontSize &&
+                LineCount == _lastLineCount && _lines.Count > 0)
+                return;
+
+            _lastFont = font;
             _lastFontSize = FontSize;
-            BuildFonts();
+            _lastLineCount = LineCount;
+            BuildLines(font);
         }
 
-        private void OnDestroy()
+        private void BuildLines(UFont font)
         {
-            if (_bgTex != null) Object.DestroyImmediate(_bgTex);
-            foreach (var it in _items)
-                if (it.Texture != null) Object.DestroyImmediate(it.Texture);
-        }
+            foreach (var l in _lines)
+                if (l.Texture != null) Object.DestroyImmediate(l.Texture);
+            _lines.Clear();
 
-        private void BuildFonts()
-        {
-            foreach (var it in _items)
-                if (it.Texture != null) Object.DestroyImmediate(it.Texture);
-            _items.Clear();
-
-            var fonts = Resources.LoadAll<UFont>("Fonts");
-            var list = new List<UFont>(fonts);
-            list.Sort((a, b) => a.name.CompareTo(b.name));
-
-            int count = Mathf.Min(MaxFonts, list.Count);
-            for (int i = 0; i < count; i++)
+            int n = Mathf.Clamp(LineCount, 1, 500);
+            for (int i = 0; i < n; i++)
             {
-                var font = list[i];
-                if (font == null) continue;
-
-                var item = new Item
-                {
-                    FontName = font.name,
-                    Font = font,
-                    Text = SampleTexts[i % SampleTexts.Length],
-                };
-                RenderItem(item);
-                if (item.Texture != null)
-                    _items.Add(item);
+                string text = (Texts != null && i < Texts.Length && !string.IsNullOrEmpty(Texts[i]))
+                    ? Texts[i]
+                    : GenerateText(i);
+                var line = new Line { Text = text };
+                RenderLine(line, font);
+                _lines.Add(line);
             }
         }
 
-        private void RenderItem(Item item)
+        private void RenderLine(Line line, UFont font)
         {
-            int w = PanelWidth;
-            int h = CellHeight;
+            if (font == null) return;
 
+            int w = PanelWidth, h = CellHeight;
             var buf = new byte[w * h * 4];
             for (int i = 0; i < buf.Length; i += 4)
             { buf[i] = 0; buf[i + 1] = 0; buf[i + 2] = 0; buf[i + 3] = 0; }
@@ -117,52 +126,58 @@ namespace KText.Example
             try
             {
                 KText_Mir3_Version3.DrawText(buf, w, h, w * 4,
-                    item.Text, item.Font, FontSize, UFontStyle.Normal,
+                    line.Text, font, FontSize, UFontStyle.Normal,
                     6, 0, w, h, TextColor,
                     Anchor, HorizontalWrapMode.Overflow, VerticalWrapMode.Overflow);
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning($"[KText50Fonts] 字体 '{item.FontName}' 渲染失败: {e.Message}");
+                Debug.LogWarning($"[KText50Fonts] 渲染失败: {e.Message}");
                 return;
             }
 
-            if (item.Texture != null) Object.DestroyImmediate(item.Texture);
-            item.Texture = KTextCommon.CreateTexture(buf, w, h);
+            if (line.Texture != null) Object.DestroyImmediate(line.Texture);
+            line.Texture = KTextCommon.CreateTexture(buf, w, h);
         }
 
         private void OnGUI()
         {
+            if (_labelStyle == null)
+            {
+                _labelStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 16,
+                    fontStyle = FontStyle.Bold,
+                };
+                _labelStyle.normal.textColor = new Color(0.6f, 0.85f, 1f);
+            }
+
+            RebuildIfNeeded();
+
             // 顶部工具栏
             GUILayout.BeginArea(new Rect(0, 0, Screen.width, 44));
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("随机文字", GUILayout.Width(100), GUILayout.Height(32)))
                 RandomizeTexts();
-            if (GUILayout.Button("重新加载字体", GUILayout.Width(120), GUILayout.Height(32)))
-                BuildFonts();
-            GUILayout.Label($"字体数量: {_items.Count}    字号: {FontSize}", GUILayout.Height(32));
+            if (GUILayout.Button("重新渲染", GUILayout.Width(100), GUILayout.Height(32)))
+                RebuildIfNeeded(true);
+            GUILayout.Label($"行数: {_lines.Count}    字号: {FontSize}", GUILayout.Height(32));
             FontSize = Mathf.RoundToInt(GUILayout.HorizontalSlider(FontSize, 12, 48, GUILayout.Width(160), GUILayout.Height(32)));
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
 
-            if (FontSize != _lastFontSize)
-            {
-                _lastFontSize = FontSize;
-                foreach (var it in _items)
-                    RenderItem(it);
-            }
-
             float top = 48f;
-            float rowH = CellHeight + RowSpacing;
-            float totalH = _items.Count * rowH;
-            float contentW = LeftColumn + PanelWidth + 20f;
+            float rowH = CellHeight + 8f;
+            float totalH = _lines.Count * rowH;
+            float leftW = 60f;
+            float contentW = leftW + PanelWidth + 20f;
 
             _scroll = GUI.BeginScrollView(new Rect(0, top, Screen.width, Screen.height - top), _scroll,
                 new Rect(0, 0, Mathf.Max(contentW, Screen.width), totalH + 20));
 
-            for (int i = 0; i < _items.Count; i++)
+            for (int i = 0; i < _lines.Count; i++)
             {
-                var it = _items[i];
+                var ln = _lines[i];
                 float y = 10 + i * rowH;
 
                 var orig = GUI.color;
@@ -172,10 +187,8 @@ namespace KText.Example
                 GUI.DrawTexture(new Rect(10, y, contentW - 20, CellHeight), _bgTex);
                 GUI.color = orig;
 
-                GUI.Label(new Rect(18, y + (CellHeight - 22) / 2f, LeftColumn - 24, 22), it.FontName, _labelStyle);
-
-                if (it.Texture != null)
-                    Graphics.DrawTexture(new Rect(LeftColumn, y, PanelWidth, CellHeight), it.Texture);
+                if (ln.Texture != null)
+                    Graphics.DrawTexture(new Rect(leftW, y, PanelWidth, CellHeight), ln.Texture);
             }
 
             GUI.EndScrollView();
@@ -183,11 +196,26 @@ namespace KText.Example
 
         private void RandomizeTexts()
         {
-            foreach (var it in _items)
+            var font = GetFont();
+            for (int i = 0; i < _lines.Count; i++)
             {
-                it.Text = SampleTexts[_rnd.Next(SampleTexts.Length)];
-                RenderItem(it);
+                if (Texts != null && i < Texts.Length && !string.IsNullOrEmpty(Texts[i]))
+                    continue; // 保留用户在 Inspector 中自定义的该行文字
+                _lines[i].Text = GenerateText(_rnd.Next(100000));
+                RenderLine(_lines[i], font);
             }
+        }
+
+        private void OnDisable()
+        {
+            foreach (var l in _lines)
+                if (l.Texture != null) Object.DestroyImmediate(l.Texture);
+            _lines.Clear();
+        }
+
+        private void OnDestroy()
+        {
+            if (_bgTex != null) Object.DestroyImmediate(_bgTex);
         }
     }
 }
