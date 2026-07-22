@@ -167,17 +167,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4d5e6f70819203a4b5c6d7e8f90a1b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InputText: "\u5728\u8FD9\u91CC\u8F93\u5165\u4EFB\u610F\u4E2D\u82F1\u6587\u6587\u5B57\uFF0CKText
+    \u4F1A\u5B9E\u65F6\u6E32\u67D3\\nKText Mir3 Version3 \u5B9E\u65F6\u8F93\u5165\u6F14\u793A"
   FontAsset: {fileID: 0}
   FontName: msyh
   FontSize: 32
-  PanelWidth: 900
-  PanelHeight: 220
   TextColor: {r: 1, g: 1, b: 1, a: 1}
   Anchor: 0
   HorizontalWrap: 0
   VerticalWrap: 1
-  InputText: "\u5728\u8FD9\u91CC\u8F93\u5165\u4EFB\u610F\u4E2D\u82F1\u6587\u6587\u5B57\uFF0CKText
-    \u4F1A\u5B9E\u65F6\u6E32\u67D3\\nKText Mir3 Version3 \u5B9E\u65F6\u8F93\u5165\u6F14\u793A"
+  UnityLayer: {fileID: 1004}
 --- !u!114 &1004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -190,10 +189,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  FontAsset: {fileID: 0}
-  FontName: msyh
+  Text: "\u5728\u8FD9\u91CC\u8F93\u5165\u4EFB\u610F\u4E2D\u82F1\u6587\u6587\u5B57\uFF0CKText
+    \u4F1A\u5B9E\u65F6\u6E32\u67D3\\nKText Mir3 Version3 \u5B9E\u65F6\u8F93\u5165\u6F14\u793A"
+  FontAsset: {fileID: 12800000, guid: a8c729592d5f43642b2e3d35d72d82be, type: 3}
   FontSize: 32
+  FontStyle: 0
   TextColor: {r: 1, g: 1, b: 1, a: 1}
+  Alignment: 0
+  HorizontalOverflow: 0
+  VerticalOverflow: 1
+  DisplayRect:
+    serializedVersion: 2
+    x: 10
+    y: 110
+    width: 760
+    height: 1
+  AutoSize: 1
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0

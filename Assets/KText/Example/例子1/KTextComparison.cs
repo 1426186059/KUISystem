@@ -50,7 +50,7 @@ namespace KText.Example
         {
             // 解析同物体上的 KText_UnityLayer 上屏组件（标准组件引用方式）
             _layer = GetComponent<KText_UnityLayer>()
-                     ?? gameObject.AddMissComponent<KText_UnityLayer>();
+                     ?? gameObject.AddComponent<KText_UnityLayer>();
         }
 
         private void OnGUI()
@@ -60,26 +60,31 @@ namespace KText.Example
 
             GUI.Label(new Rect(30, 10, 820, 30), "KText 两种 Unity 上屏方式对比（底层都是 KText 核心渲染）");
             GUI.Label(new Rect(LeftX, 40, ColumnWidth, 20), "← 手动上屏 (KText.DrawText + Graphics.DrawTexture)");
-            GUI.Label(new Rect(RightX, 40, ColumnWidth, 20), "← 组件上屏 (KText_UnityLayer.Draw)");
+            GUI.Label(new Rect(RightX, 40, ColumnWidth, 20), "← 组件上屏 (KText_UnityLayer 仿 UGUI Text)");
 
-            // 右列组件：每帧开始重置槽位索引
-            _layer.BeginFrame();
-
+            // 左列：KText 核心手动上屏
             EnsureManualCache(font);
-
             int y = 70;
             for (int i = 0; i < _lines.Length; i++)
             {
-                // 左列：KText 核心手动上屏
                 if (_manualTex != null && _manualTex[i] != null)
                     Graphics.DrawTexture(new Rect(LeftX, y, ColumnWidth, CellHeight), _manualTex[i]);
-
-                // 右列：KText_UnityLayer 组件上屏（输入变化自动重光栅化）
-                _layer.Draw(_lines[i], font, FontSize, UFontStyle.Normal,
-                    RightX, y, ColumnWidth, CellHeight, TextColor,
-                    TextAnchor.UpperLeft, HorizontalWrapMode.Overflow, VerticalWrapMode.Overflow);
-
                 y += CellHeight;
+            }
+
+            // 右列：把整段文字交给 KText_UnityLayer 组件，由其自身 OnGUI 上屏
+            if (_layer != null)
+            {
+                _layer.Text = string.Join("\n", _lines);
+                _layer.FontAsset = font;
+                _layer.FontSize = FontSize;
+                _layer.FontStyle = UFontStyle.Normal;
+                _layer.TextColor = TextColor;
+                _layer.Alignment = TextAnchor.UpperLeft;
+                _layer.HorizontalOverflow = HorizontalWrapMode.Overflow;
+                _layer.VerticalOverflow = VerticalWrapMode.Overflow;
+                _layer.AutoSize = true;
+                _layer.DisplayRect = new Rect(RightX, 70, ColumnWidth, 1);
             }
         }
 

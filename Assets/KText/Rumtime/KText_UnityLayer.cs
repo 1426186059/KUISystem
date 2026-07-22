@@ -1,121 +1,120 @@
 // ============================================================================
-// KText_UnityLayer.cs — Unity 显示适配层（标准 MonoBehaviour 组件形式）
+// KText_UnityLayer.cs — 仿 UGUI Text 的 KText 文字显示组件（标准 MonoBehaviour）
 // ============================================================================
 //
-// 【职责】
-//   作为 Unity 与 KText 核心渲染之间的桥梁组件。
-//   底层使用 KText（纯 CPU 软件光栅化）把文字渲染到 BGRA buffer，
-//   再上传为 Texture2D，并通过 IMGUI(GUI.DrawTexture) 直接绘制到屏幕。
+// 【用法】
+//   把本组件拖到场景里任意 GameObject 上，在 Inspector 设置 Text / 字体 / 颜色 /
+//   对齐 / 溢出 等属性，运行（或编辑模式，因 [ExecuteInEditMode]）即可直接显示。
 //
-// 【与 KText_WinFormLayer 的关系】
-//   KText_WinFormLayer 是 static，负责把 buffer 画到 WinForm(GDI)；
-//   KText_UnityLayer   是 MonoBehaviour，负责把 buffer 画到 Unity 屏幕。
-//   两者底层都依赖 KText 核心，无需关心光栅化细节。
-//
-// 【标准用法（组件形式）】
-//   1) 把本组件挂到场景中的任意 GameObject 上（与业务脚本同一物体即可）。
-//   2) 在业务脚本里拿到本组件引用（GetComponent / 序列化字段）：
-//        private KText_UnityLayer _layer;
-//        _layer = GetComponent<KText_UnityLayer>();
-//   3) 在 OnGUI 开头调用 _layer.BeginFrame();
-//      之后多次调用 _layer.Draw(...) 即可（每行/每段一次）。
+// 【实现】
+//   底层用 KText 核心（CPU 软件光栅化）把文字渲染到 BGRA buffer，再上传为
+//   Texture2D，通过 GUI.DrawTexture 直接上屏。每个组件只持有一张贴图，
+//   仅在文本/字体/字号/样式/颜色/对齐/尺寸等发生变化时才重新光栅化（无 Slot 池）。
+//   与 KText_WinFormLayer 对称：WinForm 版负责 GDI 上屏，本组件负责 Unity 上屏。
 //
 // ============================================================================
 
-using System.Collections.Generic;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText
 {
-    /// <summary>
-    /// Unity 显示适配层：用 KText 核心渲染并直接上屏（标准 MonoBehaviour 组件）。
-    /// </summary>
     [ExecuteInEditMode]
     [DisallowMultipleComponent]
     public class KText_UnityLayer : MonoBehaviour
     {
-        [Header("默认字体/样式（调用 Draw 时未显式指定则使用这些兜底值）")]
+        [Header("文本")]
+        [TextArea(3, 10)]
+        public string Text = "KText";
+
+        [Header("字体")]
         public UFont FontAsset;
-        public string FontName = "msyh";
-        public int FontSize = 26;
+        public int FontSize = 30;
+        public UFontStyle FontStyle = UFontStyle.Normal;
+
+        [Header("颜色")]
         public Color TextColor = Color.white;
 
-        private class Slot
+        [Header("对齐 / 溢出")]
+        public TextAnchor Alignment = TextAnchor.UpperLeft;
+        public HorizontalWrapMode HorizontalOverflow = HorizontalWrapMode.Wrap;
+        public VerticalWrapMode VerticalOverflow = VerticalWrapMode.Overflow;
+
+        [Header("显示区域（屏幕坐标，IMGUI）")]
+        public Rect DisplayRect = new Rect(10, 10, 400, 80);
+        public bool AutoSize = true; // 为 true 时按内容自适应尺寸（宽度受 DisplayRect 限制）
+
+        private Texture2D _tex;
+
+        // 缓存上次渲染参数，用于判断是否需要重绘
+        private string _cText;
+        private UFont _cFont;
+        private int _cFontSize;
+        private UFontStyle _cStyle;
+        private Color _cColor;
+        private TextAnchor _cAnchor;
+        private HorizontalWrapMode _cHWrap;
+        private VerticalWrapMode _cVWrap;
+        private int _cW, _cH;
+
+        private void OnGUI() { Render(); }
+
+        private void Render()
         {
-            public Texture2D tex;
-            public string lastText;
-            public UFont lastFont;
-            public int lastFontSize;
-            public int lastW, lastH;
-            public Color lastColor;
-            public UFontStyle lastStyle;
-            public TextAnchor lastAnchor;
-            public HorizontalWrapMode lastHWrap;
-            public VerticalWrapMode lastVWrap;
-        }
+            if (!enabled) return;
+            if (string.IsNullOrEmpty(Text)) return;
 
-        private readonly List<Slot> _pool = new List<Slot>();
-        private int _callIndex;
-
-        /// <summary>每帧开始绘制前调用，重置绘制槽位索引。</summary>
-        public void BeginFrame()
-        {
-            _callIndex = 0;
-        }
-
-        /// <summary>
-        /// 用 KText 渲染文本，并直接绘制到屏幕（IMGUI 坐标，左上角为原点，Y 向下）。
-        /// 同一帧内第 N 次调用会复用第 N 个纹理槽位，内容不变时不会重复光栅化。
-        /// </summary>
-        public void Draw(
-            string text, UFont font, int fontSize, UFontStyle style,
-            int x, int y, int clipW, int clipH,
-            Color color,
-            TextAnchor anchor = TextAnchor.UpperLeft,
-            HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
-            VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
-        {
-            if (string.IsNullOrEmpty(text)) return;
-
-            // 字体兜底：调用方未传则使用组件上配置的默认字体
-            if (font == null)
-                font = FontAsset != null ? FontAsset : KTextCommon.Load(FontName, fontSize);
+            // 字体兜底：未拖入 FontAsset 时按 FontName 从 Resources 加载
+            UFont font = FontAsset != null ? FontAsset : KTextCommon.Load();
             if (font == null) return;
+            int fontSize = FontSize > 0 ? FontSize : 16;
 
-            if (fontSize <= 0) fontSize = FontSize > 0 ? FontSize : 16;
-            if (clipW <= 0) clipW = 1;
-            if (clipH <= 0) clipH = 1;
+            int clipW, clipH;
+            Rect drawRect;
 
-            int slotIndex = _callIndex++;
-            Slot slot = (slotIndex < _pool.Count) ? _pool[slotIndex] : null;
-            if (slot == null)
+            if (!AutoSize)
             {
-                slot = new Slot();
-                _pool.Add(slot);
+                clipW = Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width));
+                clipH = Mathf.Max(1, Mathf.RoundToInt(DisplayRect.height));
+                drawRect = DisplayRect;
+            }
+            else
+            {
+                // 自动尺寸：宽度受 DisplayRect 限制（Wrap 时），高度按内容增长
+                int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
+                    ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
+                    : 100000;
+                Vector2 measured = KText.MeasureText(Text, font, fontSize, FontStyle,
+                    measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
+
+                clipW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
+                    ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
+                    : Mathf.Max(1, Mathf.CeilToInt(measured.x));
+                clipH = Mathf.Max(1, Mathf.CeilToInt(measured.y));
+                drawRect = new Rect(DisplayRect.x, DisplayRect.y, clipW, clipH);
             }
 
-            bool needRender = slot.tex == null
-                || slot.lastText != text
-                || !ReferenceEquals(slot.lastFont, font)
-                || slot.lastFontSize != fontSize
-                || slot.lastW != clipW
-                || slot.lastH != clipH
-                || slot.lastColor != color
-                || slot.lastStyle != style
-                || slot.lastAnchor != anchor
-                || slot.lastHWrap != hWrap
-                || slot.lastVWrap != vWrap;
+            bool dirty = _tex == null
+                || _cText != Text
+                || !ReferenceEquals(_cFont, font)
+                || _cFontSize != fontSize
+                || _cStyle != FontStyle
+                || _cColor != TextColor
+                || _cAnchor != Alignment
+                || _cHWrap != HorizontalOverflow
+                || _cVWrap != VerticalOverflow
+                || _cW != clipW
+                || _cH != clipH;
 
-            if (needRender)
+            if (dirty)
             {
-                if (slot.tex == null || slot.tex.width != clipW || slot.tex.height != clipH)
+                if (_tex == null || _tex.width != clipW || _tex.height != clipH)
                 {
-                    if (slot.tex != null) DestroyImmediate(slot.tex);
-                    slot.tex = new Texture2D(clipW, clipH, TextureFormat.BGRA32, false);
-                    slot.tex.hideFlags = HideFlags.HideAndDontSave;
-                    slot.tex.filterMode = FilterMode.Point;
+                    if (_tex != null) DestroyImmediate(_tex);
+                    _tex = new Texture2D(clipW, clipH, TextureFormat.BGRA32, false);
+                    _tex.hideFlags = HideFlags.HideAndDontSave;
+                    _tex.filterMode = FilterMode.Point;
                 }
 
                 var buf = new byte[clipW * clipH * 4];
@@ -124,38 +123,28 @@ namespace KText
 
                 // 用 KText 核心（CPU 光栅化）渲染到 BGRA buffer
                 KText.DrawText(buf, clipW, clipH, clipW * 4,
-                    text, font, fontSize, style,
-                    0, 0, clipW, clipH, color, anchor, hWrap, vWrap);
+                    Text, font, fontSize, FontStyle,
+                    0, 0, clipW, clipH, TextColor, Alignment, HorizontalOverflow, VerticalOverflow);
 
-                slot.tex.LoadRawTextureData(buf);
-                slot.tex.Apply(false);
+                _tex.LoadRawTextureData(buf);
+                _tex.Apply(false);
 
-                slot.lastText = text;
-                slot.lastFont = font;
-                slot.lastFontSize = fontSize;
-                slot.lastW = clipW;
-                slot.lastH = clipH;
-                slot.lastColor = color;
-                slot.lastStyle = style;
-                slot.lastAnchor = anchor;
-                slot.lastHWrap = hWrap;
-                slot.lastVWrap = vWrap;
+                _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
+                _cColor = TextColor; _cAnchor = Alignment; _cHWrap = HorizontalOverflow;
+                _cVWrap = VerticalOverflow; _cW = clipW; _cH = clipH;
             }
 
-            // 直接上屏（颜色已烘焙进贴图，使用白色避免重复着色）
-            var prevColor = GUI.color;
+            // 直接上屏（颜色已烘焙进贴图，用白色避免重复着色）
+            var prev = GUI.color;
             GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(x, y, clipW, clipH), slot.tex);
-            GUI.color = prevColor;
+            GUI.DrawTexture(drawRect, _tex);
+            GUI.color = prev;
         }
 
-        /// <summary>释放内部纹理池（场景/组件退出时自动调用）。</summary>
+        /// <summary>释放内部贴图（组件退出时自动调用）。</summary>
         public void Release()
         {
-            foreach (var s in _pool)
-                if (s.tex != null) DestroyImmediate(s.tex);
-            _pool.Clear();
-            _callIndex = 0;
+            if (_tex != null) { DestroyImmediate(_tex); _tex = null; }
         }
 
         private void OnDisable() { Release(); }

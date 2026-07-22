@@ -1,106 +1,89 @@
+// ============================================================================
+// KTextLiveInput.cs — 例子3：运行时输入文字，KText_UnityLayer 实时上屏
+// ============================================================================
+//
+// 顶部运行时文本框输入任意中英文，文字变化即赋给 KText_UnityLayer.Text，
+// 组件自动重新光栅化并上屏（输入什么，显示什么）。
+//
+// ============================================================================
+
+using KText;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText.Example
 {
-    /// <summary>
-    /// 例子 3：运行时输入框。用户在文本框中输入的任意中英文文字，
-    /// 通过 KText_UnityLayer（底层 KText 光栅化 + Unity 上屏）实时显示到屏幕。
-    /// 字体在 Inspector 中暴露，可随时更换。
-    /// </summary>
     [ExecuteInEditMode]
     public class KTextLiveInput : MonoBehaviour
     {
-        [Header("字体（Inspector 中可随时更换）")]
+        [Header("默认文字")]
+        [TextArea(2, 5)]
+        public string InputText = "在这里输入任意中英文文字，KText 会实时渲染\nKText Mir3 Version3 实时输入演示";
+
+        [Header("字体")]
         public UFont FontAsset;
         public string FontName = "msyh";
-
-        [Header("渲染设置")]
         public int FontSize = 32;
-        public int PanelWidth = 900;
-        public int PanelHeight = 220;
         public Color TextColor = Color.white;
+
+        [Header("对齐 / 溢出")]
         public TextAnchor Anchor = TextAnchor.UpperLeft;
         public HorizontalWrapMode HorizontalWrap = HorizontalWrapMode.Wrap;
         public VerticalWrapMode VerticalWrap = VerticalWrapMode.Overflow;
 
-        [Header("默认文字（也可在 Inspector 中修改；运行时可实时输入）")]
-        [TextArea(2, 6)]
-        public string InputText = "在这里输入任意中英文文字，KText 会实时渲染\nKText Mir3 Version3 实时输入演示";
+        [Header("上屏组件（留空则自动获取同物体上的 KText_UnityLayer）")]
+        public KText_UnityLayer UnityLayer;
 
         private string _runtimeText;
-        private Texture2D _bgTex;
-        private GUIStyle _labelStyle;
-        private KText_UnityLayer _layer;
+        private UFont _cachedFont;
+        private string _cachedFontKey = "";
 
         private void OnEnable()
         {
-            // 解析同物体上的 KText_UnityLayer 上屏组件（标准组件引用方式）
-            _layer = GetComponent<KText_UnityLayer>()
-                     ?? gameObject.AddMissComponent<KText_UnityLayer>();
-
+            if (UnityLayer == null)
+                UnityLayer = GetComponent<KText_UnityLayer>() ?? gameObject.AddComponent<KText_UnityLayer>();
             if (string.IsNullOrEmpty(_runtimeText))
                 _runtimeText = InputText;
-
-            if (_bgTex == null)
-            {
-                _bgTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-                _bgTex.SetPixel(0, 0, Color.white);
-                _bgTex.Apply(false);
-            }
         }
 
         private UFont GetFont()
         {
-            if (FontAsset != null) return FontAsset;
-            return KTextCommon.Load(FontName, FontSize);
+            string key = (FontAsset != null ? "asset" : "name:" + FontName) + ":" + FontSize;
+            if (_cachedFont == null || _cachedFontKey != key)
+            {
+                _cachedFont = FontAsset != null ? FontAsset : KTextCommon.Load(FontName, FontSize);
+                _cachedFontKey = key;
+            }
+            return _cachedFont;
         }
 
         private void OnGUI()
         {
-            if (_labelStyle == null)
-            {
-                _labelStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 14,
-                    fontStyle = FontStyle.Bold,
-                };
-                _labelStyle.normal.textColor = new Color(0.6f, 0.85f, 1f);
-            }
-
-            var font = GetFont();
-
-            // 准备本帧绘制（重置 KText_UnityLayer 的槽位索引）
-            _layer.BeginFrame();
-
-            // 顶部：运行时输入框（打字即实时渲染）
-            GUILayout.BeginArea(new Rect(10, 10, PanelWidth, 90));
-            GUILayout.Label("输入文字（实时渲染）：", _labelStyle);
-            _runtimeText = GUILayout.TextArea(_runtimeText, GUILayout.Height(44));
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("重置为默认", GUILayout.Width(100), GUILayout.Height(24)))
+            // 顶部输入框（运行时打字）
+            GUILayout.BeginArea(new Rect(0, 0, Screen.width, 104));
+            GUILayout.Label("输入文字（支持中英文混排、多行）：", GUILayout.Width(320));
+            string newText = GUILayout.TextArea(_runtimeText, GUILayout.Height(50));
+            if (newText != _runtimeText)
+                _runtimeText = newText;                       // 输入变化 -> 下一帧组件自动重绘
+            if (GUILayout.Button("重置为默认", GUILayout.Width(100)))
                 _runtimeText = InputText;
-            GUILayout.Label($"   字数: {_runtimeText.Length}", GUILayout.Height(24));
-            GUILayout.EndHorizontal();
             GUILayout.EndArea();
 
-            // 渲染区背景框
-            var orig = GUI.color;
-            GUI.color = new Color(0.05f, 0.05f, 0.08f, 0.85f);
-            GUI.DrawTexture(new Rect(10, 110, PanelWidth, PanelHeight), _bgTex);
-            GUI.color = orig;
+            UFont font = GetFont();
+            if (font == null || UnityLayer == null) return;
 
-            // 通过 KText_UnityLayer 渲染并直接上屏（输入变化会自动重新光栅化）
-            _layer.Draw(_runtimeText, font, FontSize, UFontStyle.Normal,
-                10, 110, PanelWidth, PanelHeight, TextColor,
-                Anchor, HorizontalWrap, VerticalWrap);
-        }
-
-        private void OnDisable()
-        {
-            if (_bgTex != null) Object.DestroyImmediate(_bgTex);
-            // KText_UnityLayer 组件自身的 OnDisable 会负责释放其纹理池
+            // 把输入文字/样式推给 KText_UnityLayer；组件自身 OnGUI 随后渲染
+            UnityLayer.Text = _runtimeText;
+            UnityLayer.FontAsset = font;
+            UnityLayer.FontSize = FontSize;
+            UnityLayer.FontStyle = UFontStyle.Normal;
+            UnityLayer.TextColor = TextColor;
+            UnityLayer.Alignment = Anchor;
+            UnityLayer.HorizontalOverflow = HorizontalWrap;
+            UnityLayer.VerticalOverflow = VerticalWrap;
+            UnityLayer.AutoSize = true;
+            UnityLayer.DisplayRect = new Rect(10, 110, Mathf.Min(Screen.width - 20, 760), 1);
         }
     }
 }

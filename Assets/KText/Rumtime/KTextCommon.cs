@@ -14,45 +14,14 @@ using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText
 {
-    public static class GameObjectExtensions
-    {
-        public static T AddMissComponent<T>(this GameObject go) where T : Component
-        {
-            var comp = go.GetComponent<T>();
-            if (comp == null)
-                comp = go.AddComponent<T>();
-            return comp;
-        }
-    }
-
-    /// <summary>
-    /// 共用工具类，提供字体加载、TextGenerator 布局、Mesh 构建、文本测量。
-    /// 所有 4 个渲染版本均依赖此类。
-    /// </summary>
     public static class KTextCommon
     {
         // ---- 字体加载 ----
-
         private static readonly Dictionary<string, UFont> _fontCache = new Dictionary<string, UFont>();
         private static UFont _defaultFont;
-        private static readonly System.Text.StringBuilder _sb = new System.Text.StringBuilder(256);
 
         /// <summary>加载默认内置字体 (LegacyRuntime.ttf)。</summary>
         public static UFont LoadDefault() => Load();
-
-        private static TextGenerator m_TextGenerator;
-        public static TextGenerator _TextGenerator
-        {
-            get
-            {
-                if (m_TextGenerator == null)
-                {
-                    m_TextGenerator = new TextGenerator();
-                }
-                return m_TextGenerator;
-            }
-        }
-
         /// <summary>
         /// 按名称加载字体。优先从 Resources/Fonts/ 加载，找不到则返回默认字体。
         /// 结果会缓存到 _fontCache。
@@ -103,32 +72,6 @@ namespace KText
                 }
                 return _defaultFont;
             }
-        }
-
-        // ---- TextGenerator 布局 ----
-
-        /// <summary>
-        /// 构建 TextGenerationSettings。
-        /// pivot=(0,1) 即左上角，Y-up 坐标系，文字向 Y 负方向延伸。
-        /// verticalOverflow=Overflow 允许文字超出裁剪区域。
-        /// </summary>
-        public static TextGenerationSettings MakeSettings(
-            UFont font, int fontSize, UFontStyle style,
-            int clipW, int clipH, Color color,
-            bool wordBreak, TextAnchor anchor)
-        {
-            return new TextGenerationSettings
-            {
-                font = font, color = color, fontSize = fontSize, fontStyle = style,
-                verticalOverflow = VerticalWrapMode.Overflow,
-                horizontalOverflow = wordBreak ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow,
-                generationExtents = new Vector2(clipW, clipH),
-                pivot = new Vector2(0, 1),
-                alignByGeometry = false, scaleFactor = 1f,
-                resizeTextForBestFit = false, richText = false,
-                lineSpacing = 1f,
-                textAnchor = anchor
-            };
         }
 
         // ---- TextAnchor 对齐辅助 ----

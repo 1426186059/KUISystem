@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 1002}
   - component: {fileID: 1004}
   m_Layer: 0
-  m_Name: KText50Fonts
+  m_Name: KText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -166,10 +166,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Text: "KText \u7684 \u7684\u53D1\u53D1\u53D1"
   FontAsset: {fileID: 12800000, guid: 41d2dab859f1fd540b181fec9f1f024c, type: 3}
-  FontName: msyh
   FontSize: 26
+  FontStyle: 2
   TextColor: {r: 1, g: 1, b: 1, a: 1}
+  Alignment: 1
+  HorizontalOverflow: 0
+  VerticalOverflow: 1
+  DisplayRect:
+    serializedVersion: 2
+    x: 367.1
+    y: 10
+    width: 400
+    height: 319
+  AutoSize: 0
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
@@ -266,5 +277,5 @@ AudioListener:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1002}
   - {fileID: 2002}
+  - {fileID: 1002}
