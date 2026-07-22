@@ -320,15 +320,15 @@ namespace KText
             return tex;
         }
 
-        private static readonly Dictionary<int, Color32[]> _atlasCache = new Dictionary<int, Color32[]>();
-
-        public static Color32[] ReadAtlas(Texture2D atlasTex)
-        {
+        /*private static readonly Dictionary<int, Color32[]> _atlasCache = new Dictionary<int, Color32[]>();
             int key = atlasTex.GetInstanceID();
             Color32[] cached;
-            if (_atlasCache.TryGetValue(key, out cached))
-                return cached;
-
+                if (_atlasCache.TryGetValue(key, out cached))
+                    return cached;
+        */
+        //每个Font 都对应了一个 Texture2D 字体图集：使用 _atlasCache 会造成 显示不同的字的时候，字显示不全的问题。
+        public static Color32[] ReadAtlas(Texture2D atlasTex)
+        {
             Color32[] result;
             if (atlasTex.isReadable)
             {
@@ -352,7 +352,6 @@ namespace KText
                 UnityEngine.Object.DestroyImmediate(readTex);
             }
 
-            _atlasCache[key] = result;
             return result;
         }
 
