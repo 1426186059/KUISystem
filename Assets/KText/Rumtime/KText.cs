@@ -12,7 +12,7 @@ using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText
 {
-    public static class KText_Mir3_Version3
+    public static class KText
     {
         const float nFontScaleCoef = 1.0f;
         const float nLineHeightCoef = 1.0f;

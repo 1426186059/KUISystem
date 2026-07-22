@@ -29,7 +29,7 @@ using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText
 {
-    public static class KText_Graphics
+    public class KText_UnityLayer : MonoBehaviour
     {
         private static Material _mat; // KText/Font shader 材质（懒初始化）
 
@@ -46,7 +46,7 @@ namespace KText
         ///   color    — 文本颜色
         ///   alignment— 对齐方式
         /// </summary>
-        public static void Draw(
+        public void Draw(
             string text, UFont font, int fontSize, UFontStyle style,
             int x, int y, int clipW, int clipH,
             Color color,

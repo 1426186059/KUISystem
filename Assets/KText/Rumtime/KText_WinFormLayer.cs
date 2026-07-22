@@ -15,25 +15,11 @@ using UFontStyle = UnityEngine.FontStyle;
 namespace KText
 {
     /// <summary>
-    /// KText 渲染版本枚举，对应三个具体实现类。
-    /// </summary>
-    public enum KTextMir3Version
-    {
-        /// <summary>纯 CPU 软件光栅化（四角 UV 双线性映射）→ BGRA buffer</summary>
-        Version3,
-    }
-
-    /// <summary>
     /// Mir3 框架与 KText 的桥梁。
     /// 通过 <see cref="ActiveVersion"/> 切换底层实现，Mir3 框架侧只依赖此类。
     /// </summary>
-    public static class KText_Mir3_Interface
+    public static class KText_WinFormLayer
     {
-        /// <summary>
-        /// 当前使用的渲染版本，默认 Version2。
-        /// </summary>
-        public const KTextMir3Version ActiveVersion = KTextMir3Version.Version3;
-
         /// <summary>
         /// 将文本渲染到 BGRA buffer（GUIText 版本忽略 buf，直接绘制）。
         /// </summary>
@@ -46,7 +32,7 @@ namespace KText
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
-            KText_Mir3_Version3.DrawText(buf, bufW, bufH, stride,
+            KText.DrawText(buf, bufW, bufH, stride,
                 text, font, fontSize, style,
                 x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
         }
@@ -73,7 +59,7 @@ namespace KText
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
-            return KText_Mir3_Version3.MeasureText(text, font, fontSize, style,
+            return KText.MeasureText(text, font, fontSize, style,
                 maxWidth, anchor, hWrap, vWrap);
         }
     }

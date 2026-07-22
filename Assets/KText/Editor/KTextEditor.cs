@@ -21,7 +21,7 @@ namespace KText.Editor
         // 打开时自动加载默认字体
         if (window._font == null)
         {
-            window._font = KText.KTextCommon.LoadDefault();
+            window._font = KTextCommon.LoadDefault();
             window.RefreshAtlasPreview();
         }
     }
