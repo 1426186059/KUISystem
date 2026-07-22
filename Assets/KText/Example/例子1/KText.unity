@@ -366,6 +366,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1448129893}
   - component: {fileID: 1448129892}
+  - component: {fileID: 1448129894}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -392,6 +393,22 @@ MonoBehaviour:
   VerticalWrap: 1
   FontAsset: {fileID: 0}
   FontName: MS Sans Serif
+--- !u!114 &1448129894
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1448129891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FontAsset: {fileID: 0}
+  FontName: msyh
+  FontSize: 30
+  TextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!224 &1448129893
 RectTransform:
   m_ObjectHideFlags: 0

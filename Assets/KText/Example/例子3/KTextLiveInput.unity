@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!129 &1
+--- !u!29 &-1
 OcclusionCullingSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -10,7 +10,7 @@ OcclusionCullingSettings:
     backfaceThreshold: 100
   m_SceneGUID: 00000000000000000000000000000000
   m_OcclusionCullingData: {fileID: 0}
---- !u!157 &2
+--- !u!104 &1
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
@@ -18,34 +18,31 @@ RenderSettings:
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.01
-  m_LinearFogNear: 0
-  m_LinearFogFar: 300
-  m_FogStart: 0
-  m_FogEnd: 300
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-  m_AmbientLight: {r: 0.2, g: 0.2, b: 0.2, a: 1}
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
   m_AmbientMode: 0
-  m_SubtractiveShadowColor: {r: 0.42, g: 0.48, b: 0.57, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
-  m_SpotCookie: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
---- !u!196 &3
+--- !u!157 &2
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 1
   m_GISettings:
     serializedVersion: 2
@@ -64,33 +61,47 @@ LightmapSettings:
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
     m_FinalGather: 0
     m_FinalGatherFiltering: 1
-    m_IndirectDenoiser: 1
-    m_DirectDenoiser: 0
-    m_EnvironmentImportanceSampling: 0
-    m_AlbedoBoostEnabled: 1
-    m_FilterMode: 1
-    m_AOFilterMode: 1
-    m_AOFiltering: 1
-    m_Denoising: 1
-    m_Dilate: 1
-    m_TemporalCoherence: 1
-    m_BakeBackend: 0
-    m_PVRSamplerSize: 256
-    m_PVRSamplerCount: 256
-    m_PVRSampleCount: 512
+    m_FinalGatherRayCount: 256
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 1
+    m_PVRSampling: 1
     m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 5
+    m_PVRFilteringGaussRadiusAO: 2
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_LightingSettings: {fileID: 0}
---- !u!184 &4
+--- !u!196 &3
 NavMeshSettings:
-  m_ObjectHideFlags: 0
   serializedVersion: 2
+  m_ObjectHideFlags: 0
   m_BuildSettings:
     serializedVersion: 3
     agentTypeID: 0
@@ -101,17 +112,16 @@ NavMeshSettings:
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
     minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
     manualTileSize: 0
     tileSize: 256
-    accurateTerrainPatches: 1
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
-  m_NavMeshBuildTime: 0
-  m_ConvexRegionPreset: 0
-  m_LegacyBakeData: {fileID: 0}
-  m_NavMeshBuildDebugSettings:
-    m_Flags: 0
 --- !u!1 &1001
 GameObject:
   m_ObjectHideFlags: 0
@@ -122,6 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1002}
   - component: {fileID: 1003}
+  - component: {fileID: 1004}
   m_Layer: 0
   m_Name: KTextLiveInput
   m_TagString: Untagged
@@ -136,12 +147,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1001}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1003
 MonoBehaviour:
@@ -164,7 +176,24 @@ MonoBehaviour:
   Anchor: 0
   HorizontalWrap: 0
   VerticalWrap: 1
-  InputText: "\u5728\u8FD9\u91CC\u8F93\u5165\u4EFB\u610F\u4E2D\u82F1\u6587\u6587\u5B57\uFF0CKText \u4F1A\u5B9E\u65F6\u6E32\u67D3\\nKText Mir3 Version3 \u5B9E\u65F6\u8F93\u5165\u6F14\u793A"
+  InputText: "\u5728\u8FD9\u91CC\u8F93\u5165\u4EFB\u610F\u4E2D\u82F1\u6587\u6587\u5B57\uFF0CKText
+    \u4F1A\u5B9E\u65F6\u6E32\u67D3\\nKText Mir3 Version3 \u5B9E\u65F6\u8F93\u5165\u6F14\u793A"
+--- !u!114 &1004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FontAsset: {fileID: 0}
+  FontName: msyh
+  FontSize: 32
+  TextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
@@ -190,12 +219,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!20 &2003
 Camera:
@@ -205,106 +235,49 @@ Camera:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
   m_Enabled: 1
+  serializedVersion: 2
   m_ClearFlags: 1
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
-  m_FOV: 60
-  m_NearClipPlane: 0.3
-  m_FarClipPlane: 1000
-  m_LensShift: {x: 0, y: 0}
-  m_FocalLength: 50
-  m_Orthographic: 0
-  m_OrthographicSize: 5
-  m_SensorSize: {x: 36, y: 24}
-  m_LensShiftMode: 0
-  m_SensorFit: 2
-  m_AllowDynamicResolution: 0
-  m_AllowMSAA: 0
-  m_AllowHDR: 1
-  m_AllowXRRendering: 1
-  m_ForceIntoRT: 0
-  m_StereoConvergence: 10
-  m_StereoSeparation: 0.022
-  m_TemporalClip: 0
-  m_NearPlaneEvents: 0
-  m_UseOcclusionCulling: 1
-  m_OcclusionCulling: 1
-  m_StereoMirrorMode: 0
-  m_CameraType: 0
-  m_CameraUsageFlags: 0
-  m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: -1
-  m_UsePhysicalProperties: 0
-  m_BlendDistance: 0.1
-  m_RendererPriority: 0
-  m_VolumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 1
-  m_VolumeTrigger: {fileID: 2001}
-  m_Aperture: 1.4
+  m_FOVAxisMode: 0
+  m_Iso: 200
   m_ShutterSpeed: 0.005
-  m_ISO: 200
-  m_ExposureCompensation: 0
+  m_Aperture: 1.4
   m_FocusDistance: 10
-  m_FocalLengthInMillis: 50
-  m_MinimumAperture: 3.9
-  m_MaximumAperture: 22
-  m_ApertureBladeCount: 5
-  m_ExposureCurveMap: {fileID: 0}
-  m_ExposureClipRange: {x: 0, y: 100}
-  m_TransparencySortMode: 0
-  m_TransparencySortAxis: {x: 0, y: 0, z: 1}
-  m_UseTransparencySortAxis: 0
-  m_RequireDepthTexture: 0
-  m_RequireOpaqueTexture: 0
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
     y: 0
     width: 1
     height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
   m_Depth: 0
-  m_CullingMatrixOverride:
-    e00: 1
-    e10: 0
-    e20: 0
-    e30: 0
-    e01: 0
-    e11: 1
-    e21: 0
-    e31: 0
-    e02: 0
-    e12: 0
-    e22: 1
-    e32: 0
-    e03: 0
-    e13: 0
-    e23: 0
-    e33: 1
-  m_ProjectionMatrixOverride:
-    e00: 1
-    e10: 0
-    e20: 0
-    e30: 0
-    e01: 0
-    e11: 1
-    e21: 0
-    e31: 0
-    e02: 0
-    e12: 0
-    e22: 1
-    e32: 0
-    e03: 0
-    e13: 0
-    e23: 0
-    e33: 1
-  m_ClearStencil: 1
-  m_ClearStencilValue: 0
-  m_SceneColorMapping: 0
-  m_SceneDepthMapping: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 0
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
 --- !u!81 &2004
 AudioListener:
   m_ObjectHideFlags: 0
@@ -313,11 +286,9 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2001}
   m_Enabled: 1
-  m_VolumeUpdateMode: 0
-  m_SpatializerPlugin: 
-  m_AmbisonicPlugin: 
---- !u!29 &-1
+--- !u!1660057539 &9223372036854775807
 SceneRoots:
+  m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1002}
   - {fileID: 2002}

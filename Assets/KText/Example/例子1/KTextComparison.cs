@@ -1,140 +1,139 @@
+// ============================================================================
+// KTextComparison.cs — 例子1：KText 两种 Unity 上屏方式对比
+// ============================================================================
+//
+// 【对比内容】（底层渲染都是 KText 核心 CPU 光栅化，仅上屏集成方式不同）
+//   左列：KText 核心手动上屏
+//         KText.DrawText -> KTextCommon.CreateTexture -> Graphics.DrawTexture
+//   右列：KText_UnityLayer 组件上屏（标准 MonoBehaviour 形式）
+//         _layer.Draw(...)
+//
+// 两个类并列挂在同一 GameObject 上，可直观对比同一段文字两种集成方式的画面。
+// ============================================================================
+
+using KText;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
 namespace KText.Example
 {
-    /// <summary>
-    /// 文本渲染对比：
-    ///   1. KText_Mir3_Version3 — 纯 CPU 软件光栅化（修复版）→ BGRA buffer → DrawTexture
-    ///   2. KText_Graphics      — OnGUI 中 DrawMeshNow 直接绘制
-    /// </summary>
+    [ExecuteInEditMode]
     public class KTextComparison : MonoBehaviour
     {
-        public static string SampleText = "正在加载客户端信息...\n请稍候...";
-        public int FontSize = 25;
-        public Color TextColor = Color.white;
-
-        public TextAnchor Anchor = TextAnchor.MiddleLeft;
-        public HorizontalWrapMode HorizontalWrap = HorizontalWrapMode.Wrap;
-        public VerticalWrapMode VerticalWrap = VerticalWrapMode.Overflow;
-
         public UFont FontAsset;
-        public string FontName;
+        public string FontName = "msyh";
+        public int FontSize = 30;
+        public Color TextColor = Color.white;
+        public int CellHeight = 50;
+        public int ColumnWidth = 360;
+        public int LeftX = 30;
+        public int RightX = 420;
 
-        private const int PanelW = 420;
-        private const int PanelH = 120;
-        private const int Spacing = 12;
-        private const int StartY = 10;
-        private const int TitleH = 40;
-        private const int LabelH = 28;
-
-        private Texture2D _whiteTex;
-
-        private byte[] _mir3V3Buffer;
-        private Texture2D _mir3V3Texture;
-
-        private void Start()
+        private readonly string[] _lines =
         {
-            if (FontAsset == null)
-            {
-                FontAsset = KTextCommon.Load(FontName, FontSize);
-            }
+            "KText 两种上屏方式对比",
+            "Hello, KText! 软件光栅化文字",
+            "中文 English 混排 1234567890",
+            "左侧：KText 核心手动上屏",
+            "右侧：KText_UnityLayer 组件上屏",
+            "底层都是 KText 核心渲染",
+        };
 
-            _whiteTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
-            _whiteTex.SetPixel(0, 0, Color.white);
-            _whiteTex.Apply(false);
+        private KText_UnityLayer _layer;
+        private Texture2D[] _manualTex;
+        private string[] _manualRendered;
+        private UFont _manualFont;
+        private int _manualFontSize;
 
-            RenderMir3V3(FontAsset);
-        }
-
-        private void OnDestroy()
+        private void OnEnable()
         {
-            if (_whiteTex != null) Object.DestroyImmediate(_whiteTex);
-            if (_mir3V3Texture != null) Object.DestroyImmediate(_mir3V3Texture);
-        }
-
-        private void RenderMir3V3(UFont font)
-        {
-            int w = PanelW, h = PanelH;
-            if (_mir3V3Buffer == null || _mir3V3Buffer.Length < w * h * 4)
-                _mir3V3Buffer = new byte[w * h * 4];
-
-            for (int i = 0; i < _mir3V3Buffer.Length; i += 4)
-            { _mir3V3Buffer[i] = 0; _mir3V3Buffer[i + 1] = 0; _mir3V3Buffer[i + 2] = 0; _mir3V3Buffer[i + 3] = 0; }
-
-            KText_Mir3_Version3.DrawText(_mir3V3Buffer, w, h, w * 4,
-                SampleText, font, FontSize, UFontStyle.Normal,
-                6, 0, w, h, TextColor,
-                Anchor, HorizontalWrap, VerticalWrap);
-
-            if (_mir3V3Texture != null) Object.DestroyImmediate(_mir3V3Texture);
-            _mir3V3Texture = KTextCommon.CreateTexture(_mir3V3Buffer, w, h);
+            // 解析同物体上的 KText_UnityLayer 上屏组件（标准组件引用方式）
+            _layer = GetComponent<KText_UnityLayer>()
+                     ?? gameObject.AddMissComponent<KText_UnityLayer>();
         }
 
         private void OnGUI()
         {
-            int y = StartY;
-            var font = FontAsset ?? KTextCommon.LoadDefault();
+            UFont font = FontAsset != null ? FontAsset : KTextCommon.Load(FontName, FontSize);
+            if (font == null) return;
 
-            DrawTitle("KText \u6587\u672c\u6e32\u67d3\u5bf9\u6bd4", ref y);
-            y += 6;
+            GUI.Label(new Rect(30, 10, 820, 30), "KText 两种 Unity 上屏方式对比（底层都是 KText 核心渲染）");
+            GUI.Label(new Rect(LeftX, 40, ColumnWidth, 20), "← 手动上屏 (KText.DrawText + Graphics.DrawTexture)");
+            GUI.Label(new Rect(RightX, 40, ColumnWidth, 20), "← 组件上屏 (KText_UnityLayer.Draw)");
 
-            DrawMethodLabel("KText_Mir3_Version3: CPU Software Raster", y);
-            y += LabelH;
-            DrawSemiTransparentBox(y);
-            if (_mir3V3Texture != null)
-                Graphics.DrawTexture(new Rect(10, y, PanelW, PanelH), _mir3V3Texture);
-            y += PanelH + Spacing;
+            // 右列组件：每帧开始重置槽位索引
+            _layer.BeginFrame();
 
-            DrawMethodLabel("KText_Graphics: DrawMesh Now in OnGUI", y);
-            y += LabelH;
-            DrawSemiTransparentBox(y);
-            KText_Graphics.Draw(SampleText, font, FontSize, UFontStyle.Normal,
-                16, y, PanelW, PanelH, TextColor,
-                Anchor, HorizontalWrap, VerticalWrap);
+            EnsureManualCache(font);
+
+            int y = 70;
+            for (int i = 0; i < _lines.Length; i++)
+            {
+                // 左列：KText 核心手动上屏
+                if (_manualTex != null && _manualTex[i] != null)
+                    Graphics.DrawTexture(new Rect(LeftX, y, ColumnWidth, CellHeight), _manualTex[i]);
+
+                // 右列：KText_UnityLayer 组件上屏（输入变化自动重光栅化）
+                _layer.Draw(_lines[i], font, FontSize, UFontStyle.Normal,
+                    RightX, y, ColumnWidth, CellHeight, TextColor,
+                    TextAnchor.UpperLeft, HorizontalWrapMode.Overflow, VerticalWrapMode.Overflow);
+
+                y += CellHeight;
+            }
         }
 
-        private void DrawSemiTransparentBox(int y)
+        // 仅在文字/字体/字号变化时才重新光栅化，避免每帧重复创建贴图
+        private void EnsureManualCache(UFont font)
         {
-            var orig = GUI.color;
-            GUI.color = new Color(0, 0, 0, 0.7f);
-            GUI.DrawTexture(new Rect(10, y, PanelW, PanelH), _whiteTex);
-            GUI.color = orig;
+            if (_manualTex == null || _manualTex.Length != _lines.Length)
+            {
+                _manualTex = new Texture2D[_lines.Length];
+                _manualRendered = new string[_lines.Length];
+            }
+
+            bool rebuild = !ReferenceEquals(_manualFont, font) || _manualFontSize != FontSize;
+            if (!rebuild)
+                for (int i = 0; i < _lines.Length; i++)
+                    if (_manualRendered[i] != _lines[i]) { rebuild = true; break; }
+
+            if (rebuild)
+            {
+                for (int i = 0; i < _lines.Length; i++)
+                {
+                    if (_manualTex[i] != null) DestroyImmediate(_manualTex[i]);
+                    _manualTex[i] = RenderManual(_lines[i], font);
+                    _manualRendered[i] = _lines[i];
+                }
+                _manualFont = font;
+                _manualFontSize = FontSize;
+            }
         }
 
-        private void DrawTitle(string title, ref int y)
+        private Texture2D RenderManual(string text, UFont font)
         {
-            var orig = GUI.color;
-            GUI.color = new Color(0.05f, 0.05f, 0.15f, 0.9f);
-            GUI.DrawTexture(new Rect(10, y, PanelW, TitleH), _whiteTex);
-            GUI.color = orig;
+            int w = ColumnWidth, h = CellHeight;
+            var buf = new byte[w * h * 4];
+            for (int i = 0; i < buf.Length; i += 4) { buf[i] = 0; buf[i + 1] = 0; buf[i + 2] = 0; buf[i + 3] = 0; }
 
-            GUI.Label(new Rect(10, y, PanelW, TitleH), title,
-                MakeLabelStyle(22, FontStyle.Bold, Color.white));
-            y += TitleH + Spacing;
+            // 用 KText 核心（CPU 光栅化）渲染到 BGRA buffer
+            KText.DrawText(buf, w, h, w * 4,
+                text, font, FontSize, UFontStyle.Normal,
+                0, 0, w, h, TextColor, TextAnchor.UpperLeft,
+                HorizontalWrapMode.Overflow, VerticalWrapMode.Overflow);
+
+            var tex = KTextCommon.CreateTexture(buf, w, h);
+            tex.Apply(false);
+            return tex;
         }
 
-        private void DrawMethodLabel(string methodLabel, int y)
+        private void OnDisable()
         {
-            var orig = GUI.color;
-            GUI.color = new Color(0.02f, 0.02f, 0.08f, 0.85f);
-            GUI.DrawTexture(new Rect(10, y, PanelW, LabelH), _whiteTex);
-            GUI.color = new Color(0.3f, 0.7f, 1f, 0.9f);
-            GUI.DrawTexture(new Rect(10, y, 4, LabelH), _whiteTex);
-            GUI.color = orig;
-
-            GUI.Label(new Rect(20, y + 4, PanelW - 16, LabelH), methodLabel,
-                MakeLabelStyle(14, FontStyle.Bold, new Color(0.5f, 0.85f, 1f)));
-        }
-
-        private static GUIStyle MakeLabelStyle(int fontSize, FontStyle style, Color color)
-        {
-            var s = new GUIStyle(GUI.skin.label);
-            s.fontSize = fontSize;
-            s.fontStyle = style;
-            s.normal.textColor = color;
-            return s;
+            if (_manualTex != null)
+                foreach (var t in _manualTex)
+                    if (t != null) DestroyImmediate(t);
+            _manualTex = null;
+            _manualRendered = null;
         }
     }
 }
