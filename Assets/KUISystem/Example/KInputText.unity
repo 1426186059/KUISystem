@@ -167,7 +167,7 @@ MonoBehaviour:
   CharacterCasing: 0
   HideSelection: 1
   m_Font: {fileID: 0}
-  FontSize: 25
+  FontSize: 15
   FontStyle: 0
   Padding: 3
   TextColor: {r: 1, g: 1, b: 1, a: 1}
