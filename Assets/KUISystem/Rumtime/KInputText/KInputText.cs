@@ -723,8 +723,14 @@ namespace KUISystem
             if (buffer == null || !Visible) return;
 
             // 背景（纯 FillRect，不依赖 KText，无条件先画，保证底框一定可见）
+            // 必须覆盖整个 rw×rh（含最外圈 1px），不能内缩成 1,1,rw-2,rh-2。
+            // 原因：游戏路径纹理来自 LockTexture(Discard)，缓冲区内容未定义；本移植 DXTextBox
+            // 用 BorderStyle.None（引擎不画边框），内缩会在最外圈留 1px 未被覆盖区域，
+            // 排空文本后该 1px 边缘暴露 Discard 残留垃圾（表现为文本框底部的水平白边）。
+            // 改为全区域覆盖后整张纹理被背景填充，残留消除；BorderStyle==1 时边框仍会
+            // 在之后重绘覆盖最外圈 1px，视觉不变。
             if (BackgroundColor.a > 0.001f)
-                DrawFill(buffer, bufW, bufH, rx, ry, rw, rh, 1, 1, rw - 2, rh - 2, BackgroundColor);
+                DrawFill(buffer, bufW, bufH, rx, ry, rw, rh, 0, 0, rw, rh, BackgroundColor);
 
             // 边框（纯 FillRect，不依赖 KText）
             var border = Focused ? FocusedBorderColor : BorderColor;
