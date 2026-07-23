@@ -1,14 +1,14 @@
 {
-    "name": "KText",
-    "rootNamespace": "KText",
+    "name": "KUISystem",
+    "rootNamespace": "KUISystem",
     "references": [],
     "includePlatforms": [
+        "Android",
         "Editor",
-        "WindowsStandalone64",
-        "macOSStandalone",
-        "LinuxStandalone64",
         "iOS",
-        "Android"
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone64"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

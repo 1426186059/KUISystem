@@ -1,4 +1,4 @@
-using KText;
+using KUISystem;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;

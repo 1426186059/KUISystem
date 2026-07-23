@@ -2,7 +2,7 @@
     "name": "KText.Editor",
     "rootNamespace": "KText.Editor",
     "references": [
-        "KText"
+        "KUISystem"
     ],
     "includePlatforms": [
         "Editor"

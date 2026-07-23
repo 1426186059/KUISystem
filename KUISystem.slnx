@@ -1,5 +1,5 @@
 ﻿<Solution>
-  <Project Path="KText.csproj" />
+  <Project Path="KUISystem.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
   <Project Path="KText.Editor.csproj" />
 </Solution>

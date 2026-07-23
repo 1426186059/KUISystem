@@ -6,7 +6,7 @@ namespace KText.Editor
 {
     public static class KTextBuildCopy
     {
-        private const string DLL_NAME = "KText.dll";
+        private const string DLL_NAME = "KUISystem.dll";
         private const string TARGET_DIR = "AAA";
 
         [InitializeOnLoadMethod]
@@ -15,7 +15,7 @@ namespace KText.Editor
             EditorApplication.delayCall += CopyDll;
         }
 
-        [MenuItem("KText/Copy DLL to AAA")]
+        [MenuItem("KUISystem/Copy DLL to AAA")]
         public static void CopyDll()
         {
             string projectPath = Application.dataPath.Replace("/Assets", "");

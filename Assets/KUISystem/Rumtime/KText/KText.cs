@@ -10,7 +10,7 @@ using UCharacterInfo = UnityEngine.CharacterInfo;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
-namespace KText
+namespace KUISystem
 {
     public static class KText
     {
@@ -142,6 +142,11 @@ namespace KText
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
+            if(font == null)
+            {
+                UnityEngine.Debug.LogError("font == null");
+            }
+
             if (string.IsNullOrWhiteSpace(text) || font == null || buf == null) return;
 
             Span<Color32> targetBuf = MemoryMarshal.Cast<byte, Color32>(buf);
@@ -152,7 +157,12 @@ namespace KText
 
             font.RequestCharactersInTexture(text, fontSize, style);
             var atlasTex = font.material.mainTexture as Texture2D;
-            if (atlasTex == null) return;
+            if (atlasTex == null)
+            {
+                UnityEngine.Debug.LogError("font.material.mainTexture == null");
+                return;
+            }
+
             int atlasW = atlasTex.width;
             int atlasH = atlasTex.height;
             Color32[] atlasPixels = KTextCommon.ReadAtlas(atlasTex);

@@ -12,7 +12,7 @@ using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
-namespace KText
+namespace KUISystem
 {
     /// <summary>
     /// Mir3 框架与 KText 的桥梁。

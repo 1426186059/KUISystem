@@ -11,7 +11,7 @@
 // 两个类并列挂在同一 GameObject 上，可直观对比同一段文字两种集成方式的画面。
 // ============================================================================
 
-using KText;
+using KUISystem;
 using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
@@ -122,7 +122,7 @@ namespace KText.Example
             for (int i = 0; i < buf.Length; i += 4) { buf[i] = 0; buf[i + 1] = 0; buf[i + 2] = 0; buf[i + 3] = 0; }
 
             // 用 KText 核心（CPU 光栅化）渲染到 BGRA buffer
-            KText.DrawText(buf, w, h, w * 4,
+            KUISystem.KText.DrawText(buf, w, h, w * 4,
                 text, font, FontSize, UFontStyle.Normal,
                 0, 0, w, h, TextColor, TextAnchor.UpperLeft,
                 HorizontalWrapMode.Overflow, VerticalWrapMode.Overflow);

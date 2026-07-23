@@ -18,7 +18,7 @@ using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
-namespace KText
+namespace KUISystem
 {
     [ExecuteInEditMode]
     [DisallowMultipleComponent]

@@ -12,7 +12,7 @@ using UnityEngine;
 using UFont = UnityEngine.Font;
 using UFontStyle = UnityEngine.FontStyle;
 
-namespace KText
+namespace KUISystem
 {
     public static class KTextCommon
     {
@@ -52,6 +52,7 @@ namespace KText
             if (fontNames != null && fontNames.Contains(name))
             {
                 f = Font.CreateDynamicFontFromOSFont(name, FontSize);
+                Debug.Log("Current Load OSFont: " + f.name);
             }
 
             if (f == null)
