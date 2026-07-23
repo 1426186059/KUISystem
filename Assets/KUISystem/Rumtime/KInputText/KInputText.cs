@@ -502,42 +502,31 @@ namespace KUISystem
         public void SetCaretFromLocalX(float localX, float localY = -1f)
         {
             string display = DisplayText();
-            if (Multiline && localY >= 0f)
+            int len = display.Length;
+            if (len == 0)
             {
-                // 多行：在 (x,y) 平面找最近的字符位置（按换行符分行估算，配合垂直滚动）
-                float lineH = Mathf.RoundToInt(FontSize);
-                int pos = 0;
-                float best = float.MaxValue;
-                for (int i = 0; i <= display.Length; i++)
-                {
-                    string prefix = display.Substring(0, i);
-                    int newLines = 0;
-                    for (int k = 0; k < prefix.Length; k++) if (prefix[k] == '\n') newLines++;
-                    float lineTop = newLines * lineH;
-                    int lastNl = prefix.LastIndexOf('\n');
-                    float xInLine = Measure(display.Substring(lastNl + 1, i - (lastNl + 1))).x;
-                    float sx = _contentOriginX + xInLine;
-                    float sy = _contentOriginY + lineTop + lineH * 0.5f;
-                    float dx = sx - localX;
-                    float dy = sy - localY;
-                    float d = dx * dx + dy * dy;
-                    if (d < best) { best = d; pos = i; }
-                }
-                CaretPosition = pos;
+                CaretPosition = 0;
                 return;
             }
+            // 用与绘制完全相同的折行算法算出每个字符处的光标本地坐标，保证点击命中精确（含自动折行/多行）。
+            int textW = Math.Max(1, _width - Padding * 2);
+            bool wordBreak = Multiline;
+            float mw = Multiline ? textW : (1 << 20);
+            ComputeCaretLayout(display, mw, wordBreak, out float[] xs, out float[] ys);
+            float lineH = Mathf.RoundToInt(FontSize);
 
-            // 单行：仅按水平距离命中（扣除当前水平滚动）
-            float lx = localX - _contentOriginX;
-            int pos2 = 0;
-            float best2 = float.MaxValue;
-            for (int i = 0; i <= display.Length; i++)
+            int pos = 0;
+            float best = float.MaxValue;
+            for (int i = 0; i <= len; i++)
             {
-                float w = Measure(display.Substring(0, i)).x;
-                float d = Math.Abs(w - lx);
-                if (d < best2) { best2 = d; pos2 = i; }
+                float sx = _contentOriginX + xs[i];
+                float sy = Multiline ? (_contentOriginY + ys[i] + lineH * 0.5f) : localY;
+                float dx = sx - localX;
+                float dy = Multiline ? (sy - localY) : 0f;
+                float d = dx * dx + dy * dy;
+                if (d < best) { best = d; pos = i; }
             }
-            CaretPosition = pos2;
+            CaretPosition = pos;
         }
 
         public void OnMouseDown(float localX, float localY, bool doubleClick)
@@ -576,12 +565,77 @@ namespace KUISystem
                 Mathf.RoundToInt(maxWidth), anchor, hWrap, VerticalWrapMode.Overflow);
         }
 
-        /// <summary>当前“逻辑行”内（自上一个换行符起）的文本宽度；多行定位光标/选区用，
-        /// 避免 Measure 返回的“整段最大行宽”把位置错算到上一行末尾。</summary>
-        private float MeasureLineWidth(string prefix)
+        /// <summary>
+        /// 复刻 KText.MeasureText 的折行算法，计算每个字符索引（含末尾）处光标的“内容本地坐标”：
+        /// x = 该位置在本行内已排宽度，y = 所在行顶相对整段内容顶的偏移。
+        /// 多行（wordBreak=true，按 maxWidth 自动折行）与显式换行 '\n' 都精确处理，
+        /// 因此光标/选区/点击命中在折行后能落在正确位置，而非被错算到整逻辑行的末尾（右边缘）。
+        /// 该坐标已相对内容顶/行首，绘制时再叠加 _contentOriginX/_contentOriginY 即为屏幕坐标。
+        /// </summary>
+        private void ComputeCaretLayout(string text, float maxWidth, bool wordBreak, out float[] xs, out float[] ys)
         {
-            int lastNl = prefix.LastIndexOf('\n');
-            return Measure(prefix.Substring(lastNl + 1)).x;
+            int len = text.Length;
+            xs = new float[len + 1];
+            ys = new float[len + 1];
+            if (len == 0) return;
+            int fontSize = Mathf.RoundToInt(FontSize);
+            var infos = new CharacterInfo[len];
+            if (Font != null)
+            {
+                Font.RequestCharactersInTexture(text, fontSize, FontStyle);
+                for (int i = 0; i < len; i++)
+                {
+                    char ch = text[i];
+                    if (ch == '\n' || ch == '\r') { infos[i] = default; continue; }
+                    CharacterInfo info;
+                    if (Font.GetCharacterInfo(ch, out info, fontSize, FontStyle))
+                        infos[i] = info;
+                    else
+                        infos[i] = default;
+                }
+            }
+
+            float curX = 0f, curY = 0f;
+            int lineStart = 0;
+            int k = 0;
+            while (k < len)
+            {
+                xs[k] = curX;
+                ys[k] = curY;
+                char ch = text[k];
+                if (ch == '\n' || ch == '\r')
+                {
+                    curX = 0f; curY += fontSize;
+                    int step = 1;
+                    if (ch == '\r' && k + 1 < len && text[k + 1] == '\n') step = 2;
+                    if (step == 2) { xs[k + 1] = curX; ys[k + 1] = curY; }
+                    lineStart = k + step;
+                    k += step;
+                    continue;
+                }
+                var ci = infos[k];
+                if (ci.advance == 0f && ch != ' ') { k++; continue; }
+                if (wordBreak && curX + ci.advance > maxWidth && k > lineStart)
+                {
+                    int breakAt = -1;
+                    for (int j = k - 1; j >= lineStart; j--)
+                        if (text[j] == ' ') { breakAt = j; break; }
+                    if (breakAt >= lineStart)
+                    {
+                        float rewind = 0f;
+                        for (int j = breakAt + 1; j < k; j++) rewind += infos[j].advance;
+                        curX = rewind; curY += fontSize; lineStart = breakAt + 1;
+                    }
+                    else
+                    {
+                        curX = 0f; curY += fontSize; lineStart = k;
+                    }
+                }
+                curX += ci.advance;
+                k++;
+            }
+            xs[len] = curX;
+            ys[len] = curY;
         }
 
         private TextAnchor TextAlignToAnchor(HorizontalAlignment align)
@@ -691,6 +745,14 @@ namespace KUISystem
             int textH = rh;
 
             string display = DisplayText();
+            int len = display.Length;
+            float lineH = Mathf.RoundToInt(FontSize);
+
+            // 复刻 KText 折行，得到每个字符索引处的光标本地坐标 (caretXs/caretYs)。
+            // 多行按 textW 自动折行；单行整行溢出（不折行）。
+            bool wordBreak = Multiline;
+            float mw = Multiline ? textW : (1 << 20);
+            ComputeCaretLayout(display, mw, wordBreak, out float[] caretXs, out float[] caretYs);
 
             // 计算文字水平偏移（WinForms TextAlign）
             TextAnchor anchor = TextAlignToAnchor(TextAlign);
@@ -705,11 +767,10 @@ namespace KUISystem
             // 滚动偏移计算（单行水平 / 多行垂直），保证光标始终落在可视区内。
             float contentOriginX = textOffsetX;
             float contentOriginY = textY;
-            float lineH = Mathf.RoundToInt(FontSize);
             if (Multiline)
             {
                 // 多行：按 textW 换行测量内容高度，内容过高时纵向滚动使光标所在行入可见区
-                float contentHeight = Measure(display, textW).y;
+                float contentHeight = caretYs[len] + lineH;
                 float viewTop = textY;
                 float viewBottom = textY + rh;
                 if (contentHeight <= rh)
@@ -720,8 +781,8 @@ namespace KUISystem
                 {
                     float maxScroll = contentHeight - rh;
                     _scrollOffsetY = Mathf.Clamp(_scrollOffsetY, 0f, maxScroll);
-                    int cp = Math.Min(_caretPosition, display.Length);
-                    float caretLineTop = Measure(display.Substring(0, cp), textW).y - lineH;
+                    int cp = Math.Min(_caretPosition, len);
+                    float caretLineTop = caretYs[cp];
                     float caretTopScreen = textY - _scrollOffsetY + caretLineTop;
                     float caretBottomScreen = caretTopScreen + lineH;
                     float margin = 2f;
@@ -736,7 +797,7 @@ namespace KUISystem
             else
             {
                 // 单行：内容过宽时水平滚动光标入可见区（类比 WinForms TextBox）
-                float contentWidth = Measure(display).x;
+                float contentWidth = caretXs[len];
                 float viewLeft = textX;
                 float viewRight = textX + textW;
                 if (contentWidth <= textW)
@@ -748,7 +809,7 @@ namespace KUISystem
                     float maxScroll = contentWidth - textW;
                     _scrollOffset = Mathf.Clamp(_scrollOffset, 0f, maxScroll);
 
-                    float caretContentX = Measure(display.Substring(0, Math.Min(_caretPosition, display.Length))).x;
+                    float caretContentX = caretXs[Math.Min(_caretPosition, len)];
                     float caretLocalX = textOffsetX - _scrollOffset + caretContentX;
                     float margin = 2f;
                     if (caretLocalX > viewRight - margin)
@@ -768,16 +829,11 @@ namespace KUISystem
             if (HasSelection && showSelection)
             {
                 int start = Math.Min(_caretPosition, _selectionAnchor);
-                start = Math.Max(0, Math.Min(start, display.Length));
-                int selLen = Math.Max(0, Math.Min(SelectionLength, display.Length - start));
-                string before = display.Substring(0, start);
-                string sel = selLen > 0 ? display.Substring(start, selLen) : string.Empty;
-                // 多行：x 用“当前行内宽度”（自上一换行符起算），不能用 Measure 返回的整段最大行宽，
-                // 否则光标/选区会错落到上一行末尾；单行仍用整段宽度。
-                float x0 = contentOriginX + (Multiline ? MeasureLineWidth(before) : Measure(before).x);
-                float x1 = contentOriginX + (Multiline
-                    ? MeasureLineWidth(display.Substring(0, Math.Min(start + selLen, display.Length)))
-                    : (Measure(before).x + Measure(sel).x));
+                start = Math.Max(0, Math.Min(start, len));
+                int end = Math.Max(_caretPosition, _selectionAnchor);
+                end = Math.Max(0, Math.Min(end, len));
+                float x0 = contentOriginX + caretXs[start];
+                float x1 = contentOriginX + caretXs[end];
                 int selX0 = (int)x0;
                 int selX1 = (int)x1;
                 int viewL = textX;
@@ -787,9 +843,8 @@ namespace KUISystem
                 int selW = Math.Max(0, selX1 - selX0);
                 if (Multiline)
                 {
-                    int end = Math.Min(start + selLen, display.Length);
-                    float selTop = Mathf.Max(0f, Measure(display.Substring(0, start), textW).y - lineH);
-                    float selBottom = Measure(display.Substring(0, end), textW).y;
+                    float selTop = caretYs[start];
+                    float selBottom = caretYs[end] + lineH;
                     int selY0 = Math.Max((int)(contentOriginY + selTop), textY);
                     int selY1 = Math.Min((int)(contentOriginY + selBottom), textY + rh);
                     int selH = Math.Max(0, selY1 - selY0);
@@ -828,16 +883,13 @@ namespace KUISystem
             // 光标
             if (Focused && _caretVisible && Enabled)
             {
-                string before = _caretPosition >= 0 && _caretPosition <= display.Length
-                    ? display.Substring(0, _caretPosition) : display;
-                // 多行：x 用当前行内宽度，避免落到上一行末尾
-                float x = contentOriginX + (Multiline ? MeasureLineWidth(before) : Measure(before).x);
+                int cp = Math.Min(Math.Max(_caretPosition, 0), len);
+                float x = contentOriginX + caretXs[cp];
                 x = Mathf.Clamp(x, textX, textX + textW - 1);
                 int caretW = Math.Max(1, Mathf.RoundToInt(FontSize * 0.08f) + 1);
                 if (Multiline)
                 {
-                    float caretLineTop = Mathf.Max(0f, Measure(before, textW).y - lineH);
-                    float yTop = contentOriginY + caretLineTop;
+                    float yTop = contentOriginY + caretYs[cp];
                     int cy0 = (int)Mathf.Clamp(yTop, textY, textY + rh);
                     int cy1 = (int)Mathf.Clamp(yTop + lineH, textY, textY + rh);
                     int ch = Math.Max(0, cy1 - cy0);
