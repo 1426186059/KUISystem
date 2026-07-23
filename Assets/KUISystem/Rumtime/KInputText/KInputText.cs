@@ -214,6 +214,10 @@ namespace KUISystem
         private bool _caretVisible = true;
         private float _caretBlinkStart = 0f;
         private bool _dirty = true;
+        /// <summary>单行文本水平滚动偏移（像素）：文字向左移出可视区的距离，使光标始终可见（类比 WinForms TextBox）。</summary>
+        private float _scrollOffset = 0f;
+        /// <summary>最近一次绘制时文字内容的左起点（本地坐标，相对控件左边缘）；用于鼠标点击命中测试。</summary>
+        private float _contentOriginX = 0f;
         #endregion
 
         #region 文本编辑
@@ -488,10 +492,11 @@ namespace KUISystem
         #endregion
 
         #region 鼠标：根据点击位置定位光标
-        /// <summary>localX 为相对输入框左边缘的坐标（控件本地坐标，会内部扣除 Padding）。</summary>
+        /// <summary>localX 为相对输入框左边缘的坐标（控件本地坐标）。点击命中测试会扣除当前水平滚动，
+        /// 把屏幕点击位置换算成文字内容坐标，从而即使文本左右滚动也能正确落点。</summary>
         public void SetCaretFromLocalX(float localX)
         {
-            float lx = localX - Padding;
+            float lx = localX - _contentOriginX;
             string display = DisplayText();
             int pos = 0;
             float best = float.MaxValue;
@@ -567,7 +572,7 @@ namespace KUISystem
         /// </summary>
         private void DrawTextRegion(byte[] buffer, int bufW, int bufH, int rx, int ry, int rw, int rh,
             int tx, int ty, int tw, int th, string s, TextAnchor anchor,
-            HorizontalWrapMode hWrap, VerticalWrapMode vWrap, Color32 col)
+            HorizontalWrapMode hWrap, VerticalWrapMode vWrap, Color32 col, int xOff = 0)
         {
             if (string.IsNullOrEmpty(s) || tw <= 0 || th <= 0) return;
             int bx = rx + tx;
@@ -578,11 +583,12 @@ namespace KUISystem
 
             // KText.KText.DrawText 按 KText 原生“自下而上”约定把文字写入临时缓冲（row 0 = 底部），
             // 与主缓冲朝向一致，CompositeBGRA 直接按行号对应合成，并把 RGBA 临时缓冲转成 BGRA 主缓冲。
+            // xOff：水平滚动偏移（像素），把整行文字左移以露出右侧被裁掉的内容（单行横向滚动）。
             int glyphPixels = 0;
             try
             {
                 KText.DrawText(_textBuf, tw, th, tw * 4, s, Font,
-                    Mathf.RoundToInt(FontSize), FontStyle, 0, 0, tw, th, col, anchor, hWrap, vWrap);
+                    Mathf.RoundToInt(FontSize), FontStyle, xOff, 0, tw, th, col, anchor, hWrap, vWrap);
                 for (int i = 3; i < need; i += 4) if (_textBuf[i] != 0) glyphPixels++;
             }
             catch (System.Exception ex)
@@ -647,7 +653,38 @@ namespace KUISystem
             else
                 textOffsetX = textX;
 
-            // 选区高亮（在文字下画底色）；未聚焦且 HideSelection 时隐藏
+            // 单行文本超出可视宽度时，水平滚动使光标始终可见（类比 WinForms TextBox）。
+            // contentOriginX = 文字内容在本地坐标中的左起点；滚动后左起点向左移动 _scrollOffset。
+            float contentOriginX = textOffsetX;
+            if (!Multiline)
+            {
+                float contentWidth = Measure(display).x;
+                float viewLeft = textX;
+                float viewRight = textX + textW;
+                if (contentWidth <= textW)
+                {
+                    _scrollOffset = 0;
+                }
+                else
+                {
+                    float maxScroll = contentWidth - textW;
+                    _scrollOffset = Mathf.Clamp(_scrollOffset, 0f, maxScroll);
+
+                    float caretContentX = Measure(display.Substring(0, Math.Min(_caretPosition, display.Length))).x;
+                    float caretLocalX = textOffsetX - _scrollOffset + caretContentX;
+                    float margin = 2f;
+                    if (caretLocalX > viewRight - margin)
+                        _scrollOffset = textOffsetX + caretContentX - (viewRight - margin);
+                    else if (caretLocalX < viewLeft + margin)
+                        _scrollOffset = textOffsetX + caretContentX - (viewLeft + margin);
+                    _scrollOffset = Mathf.Clamp(_scrollOffset, 0f, maxScroll);
+                }
+                contentOriginX = textOffsetX - _scrollOffset;
+            }
+            _contentOriginX = contentOriginX;
+
+            // 选区高亮（在文字下画底色）；未聚焦且 HideSelection 时隐藏。
+            // 选区矩形裁剪到可视区 [textX, textX+textW]，避免滚动后高亮溢出边框。
             bool showSelection = Focused || !HideSelection;
             if (HasSelection && showSelection)
             {
@@ -656,9 +693,17 @@ namespace KUISystem
                 int selLen = Math.Max(0, Math.Min(SelectionLength, display.Length - start));
                 string before = display.Substring(0, start);
                 string sel = selLen > 0 ? display.Substring(start, selLen) : string.Empty;
-                float x0 = textOffsetX + Measure(before).x;
+                float x0 = contentOriginX + Measure(before).x;
                 float w = Measure(sel).x;
-                DrawFill(buffer, bufW, bufH, rx, ry, rw, rh, (int)x0, 2, (int)Math.Max(1, w), rh - 4, SelectionBackColor);
+                int selX0 = (int)x0;
+                int selX1 = (int)(x0 + w);
+                int viewL = textX;
+                int viewR = textX + textW;
+                selX0 = Math.Max(selX0, viewL);
+                selX1 = Math.Min(selX1, viewR);
+                int selW = Math.Max(0, selX1 - selX0);
+                if (selW > 0)
+                    DrawFill(buffer, bufW, bufH, rx, ry, rw, rh, selX0, 2, selW, rh - 4, SelectionBackColor);
             }
 
             // 文字（空且未聚焦时显示占位提示）
@@ -672,8 +717,13 @@ namespace KUISystem
             else if (!string.IsNullOrEmpty(display))
             {
                 var hWrap = Multiline ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
+                // 单行：水平位置由我们自己用 contentOriginX 控制（给 DrawText 一个左偏移），
+                // 因此强制用 Left 锚点（仅保留垂直对齐），避免与偏移叠加产生双重定位。
+                // 多行：本就按宽度换行不会溢出，直接沿用对齐锚点，不加偏移（行为不变）。
+                TextAnchor drawAnchor = Multiline ? anchor : TextAnchor.MiddleLeft;
+                int xOff = Multiline ? 0 : Mathf.RoundToInt(contentOriginX - textX);
                 DrawTextRegion(buffer, bufW, bufH, rx, ry, rw, rh, textX, textY, textW, textH,
-                    display, anchor, hWrap, VerticalWrapMode.Overflow, TextColor);
+                    display, drawAnchor, hWrap, VerticalWrapMode.Overflow, TextColor, xOff);
             }
 
             // 光标
@@ -681,8 +731,8 @@ namespace KUISystem
             {
                 string before = _caretPosition >= 0 && _caretPosition <= display.Length
                     ? display.Substring(0, _caretPosition) : display;
-                float x = textOffsetX + Measure(before).x;
-                x = Math.Min(x, textX + textW - 1);
+                float x = contentOriginX + Measure(before).x;
+                x = Mathf.Clamp(x, textX, textX + textW - 1);
                 int caretW = Math.Max(1, Mathf.RoundToInt(FontSize * 0.08f) + 1);
                 DrawFill(buffer, bufW, bufH, rx, ry, rw, rh, (int)x, 2, caretW, rh - 4, CaretColor);
             }

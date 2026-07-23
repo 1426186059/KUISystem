@@ -122,6 +122,79 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &567793791
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 567793793}
+  - component: {fileID: 567793792}
+  m_Layer: 0
+  m_Name: GameObject (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &567793792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567793791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0dd38d68c14a4dae7bd3a1a0bca02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ScreenPosition: {x: 100, y: 500}
+  ScreenZoom: 1.82
+  Text: 
+  Placeholder: 
+  PlaceholderColor: {r: 1, g: 1, b: 1, a: 0}
+  Password: 0
+  PasswordChar: 42
+  MaxLength: 32767
+  ReadOnly: 0
+  Enabled: 1
+  Multiline: 0
+  Visible: 1
+  TextAlign: 0
+  CharacterCasing: 0
+  HideSelection: 1
+  m_Font: {fileID: 0}
+  FontSize: 25
+  FontStyle: 0
+  Padding: 3
+  TextColor: {r: 1, g: 1, b: 1, a: 1}
+  BackgroundColor: {r: 0.047169805, g: 0.047169805, b: 0.047169805, a: 0.85}
+  CaretColor: {r: 1, g: 1, b: 1, a: 1}
+  SelectionBackColor: {r: 0.16470589, g: 0.37254903, b: 0.8117647, a: 1}
+  Border: 0
+  BorderColor: {r: 0.1254902, g: 0.1254902, b: 0.1254902, a: 1}
+  FocusedBorderColor: {r: 0.47843137, g: 0.6117647, b: 0.7529412, a: 1}
+  BorderWidth: 1
+  Width: 240
+  Height: 40
+--- !u!4 &567793793
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567793791}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &938587266
 GameObject:
   m_ObjectHideFlags: 0
@@ -422,14 +495,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
 --- !u!114 &1180039337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -442,9 +507,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_FirstSelected: {fileID: 0}
-  m_sendNavigationEvents: 1
-  m_DragThreshold: 10
 --- !u!4 &1180039338
 Transform:
   m_ObjectHideFlags: 0
@@ -466,5 +528,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 1143373981}
   - {fileID: 938587268}
+  - {fileID: 567793793}
   - {fileID: 1031018521}
   - {fileID: 1180039338}
