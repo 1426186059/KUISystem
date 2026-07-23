@@ -286,7 +286,7 @@ namespace KUISystem
                 {
                     SetActive(this);
                     // localX：相对输入框左边缘（引擎内部会再扣除 Padding 对齐文字内容）
-                    _input.OnMouseDown(e.mousePosition.x - r.x, e.clickCount > 1);
+                    _input.OnMouseDown(e.mousePosition.x - r.x, e.mousePosition.y - r.y, e.clickCount > 1);
                     e.Use();
                 }
                 else if (_active == this)

@@ -249,7 +249,7 @@ MonoBehaviour:
   MaxLength: 32767
   ReadOnly: 0
   Enabled: 1
-  Multiline: 0
+  Multiline: 1
   Visible: 1
   TextAlign: 0
   CharacterCasing: 0
@@ -267,7 +267,7 @@ MonoBehaviour:
   FocusedBorderColor: {r: 0.47843137, g: 0.6117647, b: 0.7529412, a: 1}
   BorderWidth: 1
   Width: 240
-  Height: 40
+  Height: 100
 --- !u!1 &1031018517
 GameObject:
   m_ObjectHideFlags: 0
