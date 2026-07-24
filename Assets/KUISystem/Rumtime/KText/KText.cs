@@ -14,16 +14,8 @@ namespace KUISystem
 {
     public static class KText
     {
-        const float nFontScaleCoef = 1.0f;
-        const float nLineHeightCoef = 1.0f;
-
         static readonly List<float> mList_LineMaxWidth = new List<float>();
         static readonly List<UCharacterInfo> _charInfoCache = new List<UCharacterInfo>();
-
-        private static int GetSingleLineHeight(float nFontSize)
-        {
-            return Mathf.RoundToInt(nFontSize * nLineHeightCoef);
-        }
 
         //矩形坐标映射
         private static Vector2Int Quad_TO_UV_XYFunc(UCharacterInfo info, int nAtlasWidth, int nAtlasHeight,
@@ -47,6 +39,7 @@ namespace KUISystem
             ReadOnlySpan<Color32> atlasPixels, int nAtlasWidth, int nAtlasHeight,
             Span<Color32> targetPixels_BGRA, int targetPixels_Width, int targetPixels_Height,
             int x, int y, int clipW, int clipH,
+            int nAscent, int nLineHeight,
             ref float bMinX, ref float bMinY, ref float bMaxX, ref float bMaxY)
         {
             int nQuadWidth = info.maxX - info.minX;
@@ -56,12 +49,12 @@ namespace KUISystem
                 return;
             }
 
-            int nLineHeight = GetSingleLineHeight(nFontSize);
+            // nAscent / nLineHeight 由调用方传入（含 internal leading / 行间距，与 GDI 一致）
             int nContentHeight = (nLineCount + 1) * nLineHeight;
             int nBaseLineOffset = -nLineIndex * nLineHeight;
 
             int nBeginLinePosX = GetLineBeginPosX(clipW, anchor, nFontSize, Mathf.RoundToInt(nRowMaxWidth));
-            int targetBaseLineY = GetContentBeginBaseLineY(clipH, anchor, nFontSize, nContentHeight, nBaseLineOffset);
+            int targetBaseLineY = GetContentBeginBaseLineY(clipH, anchor, nAscent, nLineHeight, nContentHeight, nBaseLineOffset);
             int targetBottomLeftX = nBeginLinePosX + Mathf.RoundToInt(nRowNowLength) + info.minX + x;
             int targetBottomLeftY = targetBaseLineY + info.minY + y;
 
@@ -116,25 +109,24 @@ namespace KUISystem
         }
 
         //这里得到的是 基线 Y 位置
-        private static int GetContentBeginBaseLineY(int nDrawZonePixelHeight, TextAnchor anchor, int nFontSize,
-            int nContentHeight, int nBaseLineOffset)
+        // nAscent：含 internal leading 的基线偏移（= font.ascent，详见 WinForm/GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
+        //          令 baseline = T0 - nAscent，则 字形墨迹顶留白 = nAscent - maxY = internal leading，
+        //          与 WinForm/GDI（DrawText DT_TOP）一致：字整体下沉、顶部留白，而非贴顶。
+        // nLineHeight：真实行高（= font.lineHeight，含行间距），多行间距按此累加。
+        private static int GetContentBeginBaseLineY(int nDrawZonePixelHeight, TextAnchor anchor,
+            int nAscent, int nLineHeight, int nContentHeight, int nBaseLineOffset)
         {
-            int nLineHeight = GetSingleLineHeight(nFontSize);
-
-            Vector2Int LineBeginPos = default;
+            // T0：第 0 行行盒顶（buffer 坐标，向上）
+            int T0;
             if (KTextCommon.IsBottom(anchor))
-            {
-                LineBeginPos.y = nContentHeight - nLineHeight + nBaseLineOffset;
-            }
+                T0 = nContentHeight;                                                  // 整体贴底
             else if (KTextCommon.IsCenterVertical(anchor))
-            {
-                LineBeginPos.y = nDrawZonePixelHeight - nLineHeight + nBaseLineOffset - (nDrawZonePixelHeight - nContentHeight) / 2;
-            }
+                T0 = nDrawZonePixelHeight - (nDrawZonePixelHeight - nContentHeight) / 2; // 整体垂直居中
             else
-            {
-                LineBeginPos.y = nDrawZonePixelHeight - nLineHeight + nBaseLineOffset;
-            }
-            return LineBeginPos.y;
+                T0 = nDrawZonePixelHeight;                                            // 整体贴顶
+
+            // 字形顶部留白 = nAscent - maxY（internal leading），字视觉偏下，与 WinForm/GDI 一致
+            return T0 - nAscent + nBaseLineOffset;
         }
 
         // ================================================================
@@ -218,6 +210,26 @@ namespace KUISystem
                     _charInfoCache.Add(info);
                 else
                     _charInfoCache.Add(default);
+            }
+
+            // 用字体真实度量（含 internal leading / 行间距）定位，与 WinForm/GDI 一致：
+            // GDI DrawText(DT_TOP) 将基线放在 距顶 tmAscent 处（tmAscent = tmInternalLeading + 字形墨迹高度），
+            // 故字形墨迹顶留白 = internal leading，字整体偏下。这里取 font.ascent / font.lineHeight 等价之。
+            float fontScale = (font.fontSize > 0) ? (float)fontSize / font.fontSize : 1f;
+            int realAscent = Mathf.RoundToInt(font.ascent * fontScale);
+            int realLineHeight = Mathf.RoundToInt(font.lineHeight * fontScale);
+            if (realAscent <= 0 || realLineHeight <= 0)
+            {
+                // 回退：用字形墨迹估算（动态字体等取不到度量时保证可用）
+                int mAscent = fontSize, mDescent = 0;
+                for (int ci = 0; ci < _charInfoCache.Count; ci++)
+                {
+                    var cc = _charInfoCache[ci];
+                    if (cc.maxY > mAscent) mAscent = cc.maxY;
+                    if (-cc.minY > mDescent) mDescent = -cc.minY;
+                }
+                realAscent = mAscent;
+                realLineHeight = Mathf.Max(mAscent + mDescent, fontSize);
             }
 
             int totalLines = 0;
@@ -310,6 +322,7 @@ namespace KUISystem
                         nLineIndex, nLineCount, mList_LineMaxWidth[nLineIndex], nRowNowLength,
                         atlasPixels, atlasW, atlasH,
                         targetBuf, clipW, clipH, x, y, clipW, clipH,
+                        realAscent, realLineHeight,
                         ref bMinX, ref bMinY, ref bMaxX, ref bMaxY);
 
                     nRowNowLength += info.advance;
@@ -412,6 +425,21 @@ namespace KUISystem
                     _charInfoCache.Add(default);
             }
 
+            // 与 DrawText 保持一致，用字体真实行高（含行间距）累加，确保测量尺寸与渲染位置对齐
+            float fontScale = (font.fontSize > 0) ? (float)fontSize / font.fontSize : 1f;
+            int realLineHeight = Mathf.RoundToInt(font.lineHeight * fontScale);
+            if (realLineHeight <= 0)
+            {
+                int mAscent = fontSize, mDescent = 0;
+                for (int ci = 0; ci < _charInfoCache.Count; ci++)
+                {
+                    var cc = _charInfoCache[ci];
+                    if (cc.maxY > mAscent) mAscent = cc.maxY;
+                    if (-cc.minY > mDescent) mDescent = -cc.minY;
+                }
+                realLineHeight = Mathf.Max(mAscent + mDescent, fontSize);
+            }
+
             float curX = 0, curY = 0, maxW = 0;
             int lineStart = 0;
 
@@ -421,7 +449,7 @@ namespace KUISystem
                 if (ch == '\n' || ch == '\r')
                 {
                     if (curX > maxW) maxW = curX;
-                    curX = 0; curY += fontSize; lineStart = i + 1;
+                    curX = 0; curY += realLineHeight; lineStart = i + 1;
                     if (ch == '\r' && i + 1 < len && text[i + 1] == '\n') i++;
                     continue;
                 }
@@ -440,19 +468,19 @@ namespace KUISystem
                         for (int j = breakAt + 1; j < i; j++)
                             rewind += _charInfoCache[j].advance;
                         if (curX > maxW) maxW = curX;
-                        curX = rewind; curY += fontSize; lineStart = breakAt + 1;
+                        curX = rewind; curY += realLineHeight; lineStart = breakAt + 1;
                     }
                     else
                     {
                         if (curX > maxW) maxW = curX;
-                        curX = 0; curY += fontSize; lineStart = i;
+                        curX = 0; curY += realLineHeight; lineStart = i;
                     }
                 }
                 curX += ci.advance;
             }
             if (curX > maxW) maxW = curX;
 
-            Vector2 size = new Vector2(maxW, curY + fontSize);
+            Vector2 size = new Vector2(maxW, curY + realLineHeight);
 
             _mtCacheRect = new Rect(0, 0, size.x, size.y);
             _mtCacheText = text;

@@ -166,7 +166,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Text: KText
+  Text: "KText \u7B2C\u4E09\u65B9\u5220\u6389\u58EB\u5927\u592B\u90FD\u662F\u7B2C\u4E09\u65B9\u662F\u7684\u4E3A\u58EB\u5927\u592B\u58EB\u5927\u592B
+    \u58EB\u5927\u592B"
   FontAsset: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
   FontSize: 30
   FontStyle: 0
@@ -181,21 +182,21 @@ MonoBehaviour:
     width: 400
     height: 500
   AutoSize: 0
-  ShowDisplayRect: 1
+  ShowDisplayRect: 0
   ShowPixelRect: 0
-  ShowActualSizeRect: 0
+  ShowActualSizeRect: 1
   ActualSize:
     serializedVersion: 2
-    x: 529.1
-    y: 507
-    width: 78
-    height: 30
+    x: 371.1
+    y: 502
+    width: 392
+    height: 93
   PixelRect:
     serializedVersion: 2
-    x: 529.1
-    y: 507
-    width: 79
-    height: 25
+    x: 371.1
+    y: 502
+    width: 392
+    height: 93
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
