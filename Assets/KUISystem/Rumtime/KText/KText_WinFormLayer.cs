@@ -30,11 +30,14 @@ namespace KUISystem
             Color32 color,
             TextAnchor anchor = TextAnchor.UpperLeft,
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
-            VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
+            VerticalWrapMode vWrap = VerticalWrapMode.Overflow,
+            float lineHeightCoef = 1.0f,
+            float yOffsetCoef = 0.0f)
         {
             KText.DrawText(buf, bufW, bufH, stride,
                 text, font, fontSize, style,
-                x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap);
+                x, y, clipW, clipH, (Color)color, anchor, hWrap, vWrap,
+                lineHeightCoef, yOffsetCoef);
         }
 
         /// <summary>
@@ -57,10 +60,12 @@ namespace KUISystem
             int maxWidth,
             TextAnchor anchor = TextAnchor.UpperLeft,
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
-            VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
+            VerticalWrapMode vWrap = VerticalWrapMode.Overflow,
+            float lineHeightCoef = 1.0f,
+            float yOffsetCoef = 0.0f)
         {
             return KText.MeasureTextSize(text, font, fontSize, style,
-                maxWidth, anchor, hWrap, vWrap);
+                maxWidth, anchor, hWrap, vWrap, lineHeightCoef, yOffsetCoef);
         }
     }
 }

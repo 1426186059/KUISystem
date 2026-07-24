@@ -108,29 +108,16 @@ namespace KUISystem
             return 0;
         }
 
-        // 基于字形墨迹复现 WinForm/GDI 的垂直度量（DrawText 与 MeasureTextSize 共用，保证渲染与测量一致）。
-        // 严禁依赖 font.ascent/lineHeight/fontSize：KTextCommon.Load 用固定 30pt 创建动态字体，这三个属性基准是 30pt，
-        // 与绘制尺寸（如 8pt）混用会让 internalLeading 算成几十像素，字被推到 buffer 外、严重下沉（"太靠下"）。
-        // GDI DrawText(DT_TOP)：基线 = bounds.top + tmAscent，tmAscent = tmInternalLeading + 字形墨迹顶，
-        // 即字形墨迹顶到行盒顶留 internal leading 空白（Arial 等字体很小，约 10% em）、底部留 descent 空白。
-        // 这里全部基于绘制尺寸的墨迹度量：emTop=max(maxY)，emBottom=max(-minY)，emHeight=emTop+emBottom；
-        //      internalLeading 取 emHeight 的小比例（上限 1px，贴近 Arial 这类几乎无 internal leading 的字体）；
-        //      tmHeight = emHeight + internalLeading；ascent = emTop + internalLeading（≈ tmAscent）。
-        private static void ComputeFontMetrics(Font font, int fontSize, int emTop, int emBottom,
-            out int outAscent, out int outLineHeight)
-        {
-            int emHeight = emTop + emBottom;
-            int internalLeading = Mathf.Max(1, Mathf.RoundToInt(emHeight * 0.1f)); // 仅绘制尺寸的小留白，避免太靠下
-            int tmHeight = emHeight + internalLeading;
-            outAscent = emTop + internalLeading;
-            outLineHeight = tmHeight;
-        }
+        // 行高与行内基线偏移由调用方以系数传入（fontSize * coef），不再依赖字体度量本身。
+        //   nLineHeight = fontSize * lineHeightCoef（行高）
+        //   nAscent     = fontSize * yOffsetCoef（基线相对行顶偏移，对应 GDI 的 tmAscent）
+        // 即可通过参数统一配置所有字体的垂直布局。
 
         //这里得到的是 基线 Y 位置
-        // nAscent：含 internal leading 的基线偏移（= font.ascent，详见 WinForm/GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
+        // nAscent：基线相对行顶的偏移（= fontSize * yOffsetCoef，对应 GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
         //          令 baseline = T0 - nAscent，则 字形墨迹顶留白 = nAscent - maxY = internal leading，
         //          与 WinForm/GDI（DrawText DT_TOP）一致：字整体下沉、顶部留白，而非贴顶。
-        // nLineHeight：真实行高（= font.lineHeight，含行间距），多行间距按此累加。
+        // nLineHeight：行高（= fontSize * lineHeightCoef，含行间距），多行间距按此累加。
         private static int GetContentBeginBaseLineY(int nDrawZonePixelHeight, TextAnchor anchor,
             int nAscent, int nLineHeight, int nContentHeight, int nBaseLineOffset)
         {
@@ -160,11 +147,14 @@ namespace KUISystem
             Color color,
             TextAnchor anchor = TextAnchor.UpperLeft,
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
-            VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
+            VerticalWrapMode vWrap = VerticalWrapMode.Overflow,
+            float lineHeightCoef = 1.0f,
+            float yOffsetCoef = 0.0f)
         {
             Rect ignore;
             DrawText(buf, bufW, bufH, stride, text, font, fontSize, style,
-                x, y, clipW, clipH, color, anchor, hWrap, vWrap, out ignore);
+                x, y, clipW, clipH, color, anchor, hWrap, vWrap, out ignore,
+                lineHeightCoef, yOffsetCoef);
         }
 
         // 实现版：额外输出文字真实渲染包围盒（buffer 本地坐标，row 0 在底）
@@ -176,7 +166,9 @@ namespace KUISystem
             TextAnchor anchor,
             HorizontalWrapMode hWrap,
             VerticalWrapMode vWrap,
-            out Rect bounds)
+            out Rect bounds,
+            float lineHeightCoef = 1.0f,
+            float yOffsetCoef = 0.0f)
         {
             bounds = Rect.zero;
             float bMinX = float.MaxValue, bMinY = float.MaxValue, bMaxX = float.MinValue, bMaxY = float.MinValue;
@@ -230,19 +222,11 @@ namespace KUISystem
                     _charInfoCache.Add(default);
             }
 
-            // 基于字形墨迹复现 WinForm/GDI 的垂直定位（不依赖 font.ascent/lineHeight/fontSize，
-            // 这三个属性对动态字体在运行时不可靠，会返回 0 或基准尺寸错误，导致回退回 fontSize）。
-            // GDI DrawText(DT_TOP)：基线 = bounds.top + tmAscent，tmAscent = tmInternalLeading + 字形墨迹顶。
-            // 即字形墨迹顶到行盒顶留 internal leading 空白、底部留 descent 空白 —— 字整体偏下（偏低）。
-            int emTop = 0, emBottom = 0;
-            for (int ci = 0; ci < _charInfoCache.Count; ci++)
-            {
-                var cc = _charInfoCache[ci];
-                if (cc.maxY > emTop) emTop = cc.maxY;
-                if (-cc.minY > emBottom) emBottom = -cc.minY;
-            }
-            int realAscent, realLineHeight;
-            ComputeFontMetrics(font, fontSize, emTop, emBottom, out realAscent, out realLineHeight);
+            // 行高与行内基线偏移由调用方以系数提供（可直接配置）：
+            //   nLineHeight = fontSize * lineHeightCoef（行高）
+            //   nAscent     = fontSize * yOffsetCoef（基线相对行顶偏移，对应 GDI 的 tmAscent）
+            int realAscent     = Mathf.RoundToInt(fontSize * yOffsetCoef);
+            int realLineHeight = Mathf.RoundToInt(fontSize * lineHeightCoef);
 
             int totalLines = 0;
             {
@@ -395,7 +379,9 @@ namespace KUISystem
             int maxWidth,
             TextAnchor anchor = TextAnchor.UpperLeft,
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
-            VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
+            VerticalWrapMode vWrap = VerticalWrapMode.Overflow,
+            float lineHeightCoef = 1.0f,
+            float yOffsetCoef = 0.0f)
         {
             if (_mtCacheValid
                 && _mtCacheText == text
@@ -437,16 +423,8 @@ namespace KUISystem
                     _charInfoCache.Add(default);
             }
 
-            // 与 DrawText 共用同一套垂直度量（ComputeFontMetrics），确保测量尺寸与渲染位置一致
-            int emTop = 0, emBottom = 0;
-            for (int ci = 0; ci < _charInfoCache.Count; ci++)
-            {
-                var cc = _charInfoCache[ci];
-                if (cc.maxY > emTop) emTop = cc.maxY;
-                if (-cc.minY > emBottom) emBottom = -cc.minY;
-            }
-            int _ascentUnused, realLineHeight;
-            ComputeFontMetrics(font, fontSize, emTop, emBottom, out _ascentUnused, out realLineHeight);
+            // 与 DrawText 共用同一套垂直度量：行高由系数控制，确保测量尺寸与渲染位置一致
+            int realLineHeight = Mathf.RoundToInt(fontSize * lineHeightCoef);
 
             float curX = 0, curY = 0, maxW = 0;
             int lineStart = 0;

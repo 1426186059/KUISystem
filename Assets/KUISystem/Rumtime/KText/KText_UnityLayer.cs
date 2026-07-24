@@ -41,6 +41,12 @@ namespace KUISystem
         public HorizontalWrapMode HorizontalOverflow = HorizontalWrapMode.Wrap;
         public VerticalWrapMode VerticalOverflow = VerticalWrapMode.Overflow;
 
+        [Header("垂直度量（测试）")]
+        [Tooltip("行高 = FontSize × 该系数")]
+        public float LineHeightCoef = 1.0f;
+        [Tooltip("基线相对行顶偏移 = FontSize × 该系数（对应 GDI 的 tmAscent）")]
+        public float YOffsetCoef = 0.0f;
+
         [Header("显示区域（屏幕坐标，IMGUI）")]
         public Rect DisplayRect = new Rect(10, 10, 400, 80);
         public bool AutoSize = true; // 为 true 时按内容自适应尺寸（宽度受 DisplayRect 限制）
@@ -74,6 +80,8 @@ namespace KUISystem
         private HorizontalWrapMode _cHWrap;
         private VerticalWrapMode _cVWrap;
         private int _cW, _cH;
+        private float _cLineHeightCoef;
+        private float _cYOffsetCoef;
 
         private void OnGUI() { Render(); }
 
@@ -101,7 +109,8 @@ namespace KUISystem
                 ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
                 : 100000;
             Vector2 measured = KText.MeasureTextSize(Text, font, fontSize, FontStyle,
-                measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
+                measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow,
+                LineHeightCoef, YOffsetCoef);
 
             if (!AutoSize)
             {
@@ -129,7 +138,9 @@ namespace KUISystem
                 || _cHWrap != HorizontalOverflow
                 || _cVWrap != VerticalOverflow
                 || _cW != clipW
-                || _cH != clipH;
+                || _cH != clipH
+                || _cLineHeightCoef != LineHeightCoef
+                || _cYOffsetCoef != YOffsetCoef;
 
             if (dirty)
             {
@@ -149,7 +160,7 @@ namespace KUISystem
                 KText.DrawText(buf, clipW, clipH, clipW * 4,
                     Text, font, fontSize, FontStyle,
                     0, 0, clipW, clipH, TextColor, Alignment, HorizontalOverflow, VerticalOverflow,
-                    out Rect drawnBounds);
+                    out Rect drawnBounds, LineHeightCoef, YOffsetCoef);
 
                 _tex.LoadRawTextureData(buf);
                 _tex.Apply(false);
@@ -171,6 +182,7 @@ namespace KUISystem
                 _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
                 _cColor = TextColor; _cAnchor = Alignment; _cHWrap = HorizontalOverflow;
                 _cVWrap = VerticalOverflow; _cW = clipW; _cH = clipH;
+                _cLineHeightCoef = LineHeightCoef; _cYOffsetCoef = YOffsetCoef;
             }
 
             // 直接上屏（颜色已烘焙进贴图，用白色避免重复着色）
