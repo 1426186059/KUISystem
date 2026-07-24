@@ -49,14 +49,16 @@ namespace KUISystem
 
 #if UNITY_EDITOR
         [Header("调试")]
-        [Tooltip("实际尺寸（只读：位置+尺寸，来自 MeasureText 测量，与 AutoSize 开关无关）")]
-        public Rect ActualSize = new Rect(0, 0, 0, 0);
         [Tooltip("青色框：标出设定的显示区域 DisplayRect")]
         public bool ShowDisplayRect = false;
-        [Tooltip("黄色框：实际像素尺寸（扫描像素 buffer，非测量）")]
+        [Tooltip("黄色框：实际像素尺寸（来自 KText 渲染包围盒）")]
         public bool ShowPixelRect = false;
         [Tooltip("绿色框：实际绘制区域（来自 MeasureText 测量，仅 Editor 下生效）")]
         public bool ShowActualSizeRect = false;
+        [Tooltip("实际尺寸（只读：位置+尺寸，来自 MeasureText 测量，与 AutoSize 开关无关）")]
+        public Rect ActualSize = new Rect(0, 0, 0, 0);
+        [Tooltip("黄色框对应的实际像素 Rect（屏幕坐标，已做垂直翻转）")]
+        public Rect PixelRect = new Rect(0, 0, 0, 0);
 
         private Rect _textBoundsLocal;   // 文字实际像素包围盒（buf 本地坐标，row 0 在底）
         private Texture2D _whiteTex;     // 1x1 白色像素，用于绘制矩形框
@@ -117,15 +119,6 @@ namespace KUISystem
                 drawRect = new Rect(DisplayRect.x, DisplayRect.y, clipW, clipH);
             }
 
-#if UNITY_EDITOR
-            // 实际尺寸（与 AutoSize 无关）：尺寸取文字真实测量值，位置跟随文字实际落位
-            // （复用渲染扫描得到的 _textBoundsLocal，使绿框在任何对齐方式下都贴合文字）
-            ActualSize = new Rect(
-                drawRect.x + _textBoundsLocal.x,
-                drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
-                measured.x, measured.y);
-#endif
-
             bool dirty = _tex == null
                 || _cText != Text
                 || !ReferenceEquals(_cFont, font)
@@ -163,6 +156,17 @@ namespace KUISystem
 
 #if UNITY_EDITOR
                 _textBoundsLocal = drawnBounds;
+                ActualSize = new Rect(
+                        drawRect.x + _textBoundsLocal.x,
+                        drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
+                        _textBoundsLocal.width,
+                        _textBoundsLocal.height);
+
+                PixelRect = new Rect(
+                        drawRect.x + _textBoundsLocal.x,
+                        drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
+                        _textBoundsLocal.width,
+                        _textBoundsLocal.height);
 #endif
 
                 _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
@@ -191,27 +195,20 @@ namespace KUISystem
                     _whiteTex.hideFlags = HideFlags.HideAndDontSave;
                 }
                 float t = 2f;
-                if (ShowActualSizeRect)
-                {
-                    GUI.color = Color.green;
-                    DrawRectOutline(ActualSize, t);
-                }
                 if (ShowDisplayRect)
                 {
                     GUI.color = Color.cyan;
                     DrawRectOutline(DisplayRect, t);
                 }
+                if (ShowActualSizeRect)
+                {
+                    GUI.color = Color.green;
+                    DrawRectOutline(ActualSize, t);
+                }
                 if (ShowPixelRect)
                 {
-                    // 用渲染时扫描得到的真实像素包围盒（与文字实际落位完全一致，适配任意对齐/折行）
-                    // 注意：GUI.DrawTexture 按纹理约定，buf row 0 对应矩形底部，故垂直需翻转；水平不变。
-                    Rect textRect = new Rect(
-                        drawRect.x + _textBoundsLocal.x,
-                        drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
-                        _textBoundsLocal.width,
-                        _textBoundsLocal.height);
                     GUI.color = Color.yellow;
-                    DrawRectOutline(textRect, t);
+                    DrawRectOutline(PixelRect, t);
                 }
                 GUI.color = Color.white;
             }

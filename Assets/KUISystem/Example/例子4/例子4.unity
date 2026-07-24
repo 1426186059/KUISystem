@@ -181,15 +181,21 @@ MonoBehaviour:
     width: 400
     height: 500
   AutoSize: 0
-  ActualSize:
-    serializedVersion: 2
-    x: 530.1
-    y: 507
-    width: 78
-    height: 30
-  ShowDisplayRect: 1
+  ShowDisplayRect: 0
   ShowPixelRect: 0
   ShowActualSizeRect: 0
+  ActualSize:
+    serializedVersion: 2
+    x: 529.1
+    y: 507
+    width: 79
+    height: 25
+  PixelRect:
+    serializedVersion: 2
+    x: 529.1
+    y: 507
+    width: 79
+    height: 25
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
