@@ -181,15 +181,15 @@ MonoBehaviour:
     width: 400
     height: 500
   AutoSize: 0
-  ShowDisplayRect: 0
+  ShowDisplayRect: 1
   ShowPixelRect: 0
   ShowActualSizeRect: 0
   ActualSize:
     serializedVersion: 2
     x: 529.1
     y: 507
-    width: 79
-    height: 25
+    width: 78
+    height: 30
   PixelRect:
     serializedVersion: 2
     x: 529.1

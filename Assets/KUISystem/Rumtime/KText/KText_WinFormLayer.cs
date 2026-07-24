@@ -59,7 +59,7 @@ namespace KUISystem
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
-            return KText.MeasureText(text, font, fontSize, style,
+            return KText.MeasureTextSize(text, font, fontSize, style,
                 maxWidth, anchor, hWrap, vWrap);
         }
     }

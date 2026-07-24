@@ -335,18 +335,56 @@ namespace KUISystem
 
             if (bMaxX >= bMinX && bMaxY >= bMinY)
                 bounds = new Rect(bMinX, bMinY, bMaxX - bMinX, bMaxY - bMinY);
+
+            // 把渲染包围盒写入缓存（与 MeasureTextSize 共用 _mtCacheRect），
+            // 这样相同输入下后续 MeasureTextSize / DrawText 可直接复用，避免重复计算。
+            _mtCacheRect = bounds;
+            _mtCacheText = text;
+            _mtCacheFont = font;
+            _mtCacheFontSize = fontSize;
+            _mtCacheStyle = style;
+            _mtCacheMaxWidth = clipW;
+            _mtCacheAnchor = anchor;
+            _mtCacheHWrap = hWrap;
+            _mtCacheVWrap = vWrap;
+            _mtCacheValid = true;
         }
 
         // ================================================================
-        //  MeasureText — 无缓存，每次直接计算
+        //  MeasureTextSize — 文本尺寸测量，带单条缓存（_mtCacheRect）。
+        //  输入未变时直接复用缓存，不再重新计算；DrawText 也会把渲染包围盒写入同一缓存。
         // ================================================================
-        public static Vector2 MeasureText(
+        private static string            _mtCacheText;
+        private static UFont             _mtCacheFont;
+        private static int               _mtCacheFontSize;
+        private static UFontStyle        _mtCacheStyle;
+        private static int               _mtCacheMaxWidth;
+        private static TextAnchor        _mtCacheAnchor;
+        private static HorizontalWrapMode _mtCacheHWrap;
+        private static VerticalWrapMode  _mtCacheVWrap;
+        private static bool              _mtCacheValid;
+        private static Rect              _mtCacheRect;
+
+        public static Vector2 MeasureTextSize(
             string text, UFont font, int fontSize, UFontStyle style,
             int maxWidth,
             TextAnchor anchor = TextAnchor.UpperLeft,
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
+            if (_mtCacheValid
+                && _mtCacheText == text
+                && ReferenceEquals(_mtCacheFont, font)
+                && _mtCacheFontSize == fontSize
+                && _mtCacheStyle == style
+                && _mtCacheMaxWidth == maxWidth
+                && _mtCacheAnchor == anchor
+                && _mtCacheHWrap == hWrap
+                && _mtCacheVWrap == vWrap)
+            {
+                return new Vector2(_mtCacheRect.width, _mtCacheRect.height);
+            }
+
             if (string.IsNullOrEmpty(text) || font == null) return Vector2.zero;
             if (fontSize <= 0) fontSize = 16;
             if (maxWidth <= 0) maxWidth = 10000;
@@ -414,7 +452,20 @@ namespace KUISystem
             }
             if (curX > maxW) maxW = curX;
 
-            return new Vector2(maxW, curY + fontSize);
+            Vector2 size = new Vector2(maxW, curY + fontSize);
+
+            _mtCacheRect = new Rect(0, 0, size.x, size.y);
+            _mtCacheText = text;
+            _mtCacheFont = font;
+            _mtCacheFontSize = fontSize;
+            _mtCacheStyle = style;
+            _mtCacheMaxWidth = maxWidth;
+            _mtCacheAnchor = anchor;
+            _mtCacheHWrap = hWrap;
+            _mtCacheVWrap = vWrap;
+            _mtCacheValid = true;
+
+            return size;
         }
 
     }

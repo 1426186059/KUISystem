@@ -551,7 +551,7 @@ namespace KUISystem
             if (string.IsNullOrEmpty(text)) return Vector2.zero;
             var anchor = TextAlignToAnchor(TextAlign);
             var hWrap = Multiline ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
-            return KText.MeasureText(text, Font, Mathf.RoundToInt(FontSize), FontStyle,
+            return KText.MeasureTextSize(text, Font, Mathf.RoundToInt(FontSize), FontStyle,
                 1 << 20, anchor, hWrap, VerticalWrapMode.Overflow);
         }
 
@@ -561,12 +561,12 @@ namespace KUISystem
             if (string.IsNullOrEmpty(text)) return Vector2.zero;
             var anchor = TextAlignToAnchor(TextAlign);
             var hWrap = Multiline ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
-            return KText.MeasureText(text, Font, Mathf.RoundToInt(FontSize), FontStyle,
+            return KText.MeasureTextSize(text, Font, Mathf.RoundToInt(FontSize), FontStyle,
                 Mathf.RoundToInt(maxWidth), anchor, hWrap, VerticalWrapMode.Overflow);
         }
 
         /// <summary>
-        /// 复刻 KText.MeasureText 的折行算法，计算每个字符索引（含末尾）处光标的“内容本地坐标”：
+        /// 复刻 KText.MeasureTextSize 的折行算法，计算每个字符索引（含末尾）处光标的“内容本地坐标”：
         /// x = 该位置在本行内已排宽度，y = 所在行顶相对整段内容顶的偏移。
         /// 多行（wordBreak=true，按 maxWidth 自动折行）与显式换行 '\n' 都精确处理，
         /// 因此光标/选区/点击命中在折行后能落在正确位置，而非被错算到整逻辑行的末尾（右边缘）。

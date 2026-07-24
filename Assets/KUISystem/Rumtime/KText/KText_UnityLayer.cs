@@ -53,9 +53,9 @@ namespace KUISystem
         public bool ShowDisplayRect = false;
         [Tooltip("黄色框：实际像素尺寸（来自 KText 渲染包围盒）")]
         public bool ShowPixelRect = false;
-        [Tooltip("绿色框：实际绘制区域（来自 MeasureText 测量，仅 Editor 下生效）")]
+        [Tooltip("绿色框：实际绘制区域（来自 MeasureTextSize 测量，仅 Editor 下生效）")]
         public bool ShowActualSizeRect = false;
-        [Tooltip("实际尺寸（只读：位置+尺寸，来自 MeasureText 测量，与 AutoSize 开关无关）")]
+        [Tooltip("实际尺寸（只读：位置+尺寸，来自 MeasureTextSize 测量，与 AutoSize 开关无关）")]
         public Rect ActualSize = new Rect(0, 0, 0, 0);
         [Tooltip("黄色框对应的实际像素 Rect（屏幕坐标，已做垂直翻转）")]
         public Rect PixelRect = new Rect(0, 0, 0, 0);
@@ -100,7 +100,7 @@ namespace KUISystem
             int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
                 ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
                 : 100000;
-            Vector2 measured = KText.MeasureText(Text, font, fontSize, FontStyle,
+            Vector2 measured = KText.MeasureTextSize(Text, font, fontSize, FontStyle,
                 measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
 
             if (!AutoSize)
@@ -159,8 +159,7 @@ namespace KUISystem
                 ActualSize = new Rect(
                         drawRect.x + _textBoundsLocal.x,
                         drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
-                        _textBoundsLocal.width,
-                        _textBoundsLocal.height);
+                        measured.x, measured.y);
 
                 PixelRect = new Rect(
                         drawRect.x + _textBoundsLocal.x,
