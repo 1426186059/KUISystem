@@ -45,17 +45,22 @@ namespace KUISystem
         public Rect DisplayRect = new Rect(10, 10, 400, 80);
         public bool AutoSize = true; // 为 true 时按内容自适应尺寸（宽度受 DisplayRect 限制）
 
-        [Header("自动尺寸结果（只读，AutoSize 时由内容算得）")]
-        public Vector2 AutoSizeSize = Vector2.zero;
-
-        [Header("调试")]
-        public bool ShowDisplayRect = false; // 是否用矩形框标出设定的显示区域 (DisplayRect)
-        public bool ShowTextRect = false;    // 是否用矩形框标出实际字体渲染像素包围盒
-
-        private Rect _textBoundsLocal; // 文字实际像素包围盒（buf 本地坐标，row 0 在底）
-
         private Texture2D _tex;
-        private Texture2D _whiteTex; // 1x1 白色像素，用于绘制矩形框
+
+#if UNITY_EDITOR
+        [Header("调试")]
+        [Tooltip("实际尺寸（只读：位置+尺寸，来自 MeasureText 测量，与 AutoSize 开关无关）")]
+        public Rect ActualSize = new Rect(0, 0, 0, 0);
+        [Tooltip("青色框：标出设定的显示区域 DisplayRect")]
+        public bool ShowDisplayRect = false;
+        [Tooltip("黄色框：实际像素尺寸（扫描像素 buffer，非测量）")]
+        public bool ShowTextRect = false;
+        [Tooltip("绿色框：实际绘制区域（来自 MeasureText 测量，仅 Editor 下生效）")]
+        public bool ShowAutoSizeRect = false;
+
+        private Rect _textBoundsLocal;   // 文字实际像素包围盒（buf 本地坐标，row 0 在底）
+        private Texture2D _whiteTex;     // 1x1 白色像素，用于绘制矩形框
+#endif
 
         // 缓存上次渲染参数，用于判断是否需要重绘
         private string _cText;
@@ -88,17 +93,13 @@ namespace KUISystem
             int clipW, clipH;
             Rect drawRect;
 
-            // 文本实际尺寸（用于 AutoSize 与 ShowTextRect）。Wrap 时按 DisplayRect.width 约束测量，
+            // 文本实际尺寸（始终测量，与 AutoSize 无关）。Wrap 时按 DisplayRect.width 约束测量，
             // Overflow 时按超长测量，得到真实文字包围盒 (measured.x = 最宽行宽, measured.y = 总行高)。
-            Vector2 measured = Vector2.zero;
-            if (AutoSize || ShowTextRect)
-            {
-                int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
-                    ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
-                    : 100000;
-                measured = KText.MeasureText(Text, font, fontSize, FontStyle,
-                    measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
-            }
+            int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
+                ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
+                : 100000;
+            Vector2 measured = KText.MeasureText(Text, font, fontSize, FontStyle,
+                measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
 
             if (!AutoSize)
             {
@@ -114,8 +115,12 @@ namespace KUISystem
                     : Mathf.Max(1, Mathf.CeilToInt(measured.x));
                 clipH = Mathf.Max(1, Mathf.CeilToInt(measured.y));
                 drawRect = new Rect(DisplayRect.x, DisplayRect.y, clipW, clipH);
-                AutoSizeSize = new Vector2(clipW, clipH);
             }
+
+#if UNITY_EDITOR
+            // 实际尺寸（与 AutoSize 无关）：位置取 DisplayRect 左上角，尺寸取文字真实测量值
+            ActualSize = new Rect(DisplayRect.x, DisplayRect.y, measured.x, measured.y);
+#endif
 
             bool dirty = _tex == null
                 || _cText != Text
@@ -151,7 +156,8 @@ namespace KUISystem
                 _tex.LoadRawTextureData(buf);
                 _tex.Apply(false);
 
-                // 扫描渲染结果，得到文字实际像素包围盒（本地坐标，row 0 在底部）
+#if UNITY_EDITOR
+                // 扫描渲染结果，得到文字实际像素包围盒（本地坐标，row 0 在底部）—— 仅 Editor 下 ShowTextRect 用
                 int minX = clipW, maxX = -1, minY = clipH, maxY = -1;
                 for (int row = 0; row < clipH; row++)
                 {
@@ -170,6 +176,7 @@ namespace KUISystem
                 _textBoundsLocal = (maxX >= 0)
                     ? new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1)
                     : new Rect(0, 0, 0, 0);
+#endif
 
                 _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
                 _cColor = TextColor; _cAnchor = Alignment; _cHWrap = HorizontalOverflow;
@@ -182,10 +189,12 @@ namespace KUISystem
             GUI.DrawTexture(drawRect, _tex);
             GUI.color = prev;
 
-            // 调试：用矩形框标出两类边界（在 Inspector 分别勾选开启）
-            //   显示区域框 (DisplayRect) —— 青色：你设定的显示区域
-            //   实际字体尺寸框 (textRect) —— 黄色：文字真实包围盒 (measured.x × measured.y)，按对齐定位
-            if ((ShowDisplayRect || ShowTextRect) && _tex != null)
+#if UNITY_EDITOR
+            // 调试：用矩形框标出边界（仅 Editor）
+            //   实际尺寸框 (ActualSize) —— 绿色：实际绘制区域（位置+尺寸），勾选 ShowAutoSizeRect 时显示
+            //   显示区域框 (DisplayRect) —— 青色：你设定的显示区域，勾选 ShowDisplayRect 时显示
+            //   实际像素尺寸框 (_textBoundsLocal) —— 黄色：文字真实像素包围盒，勾选 ShowTextRect 时显示
+            if (_tex != null && (ShowDisplayRect || ShowTextRect || ShowAutoSizeRect))
             {
                 if (_whiteTex == null)
                 {
@@ -195,6 +204,11 @@ namespace KUISystem
                     _whiteTex.hideFlags = HideFlags.HideAndDontSave;
                 }
                 float t = 2f;
+                if (ShowAutoSizeRect)
+                {
+                    GUI.color = Color.green;
+                    DrawRectOutline(ActualSize, t);
+                }
                 if (ShowDisplayRect)
                 {
                     GUI.color = Color.cyan;
@@ -214,8 +228,10 @@ namespace KUISystem
                 }
                 GUI.color = Color.white;
             }
+#endif
         }
 
+#if UNITY_EDITOR
         /// <summary>用 1x1 白像素贴图绘制矩形边框（4 条边）。</summary>
         private void DrawRectOutline(Rect r, float thickness)
         {
@@ -224,12 +240,15 @@ namespace KUISystem
             GUI.DrawTexture(new Rect(r.x, r.y, thickness, r.height), _whiteTex);
             GUI.DrawTexture(new Rect(r.x + r.width - thickness, r.y, thickness, r.height), _whiteTex);
         }
+#endif
 
         /// <summary>释放内部贴图（组件退出时自动调用）。</summary>
         public void Release()
         {
             if (_tex != null) { DestroyImmediate(_tex); _tex = null; }
+#if UNITY_EDITOR
             if (_whiteTex != null) { DestroyImmediate(_whiteTex); _whiteTex = null; }
+#endif
         }
 
         private void OnDisable() { Release(); }
