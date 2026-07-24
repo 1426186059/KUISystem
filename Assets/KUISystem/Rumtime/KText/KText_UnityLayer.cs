@@ -45,7 +45,17 @@ namespace KUISystem
         public Rect DisplayRect = new Rect(10, 10, 400, 80);
         public bool AutoSize = true; // 为 true 时按内容自适应尺寸（宽度受 DisplayRect 限制）
 
+        [Header("自动尺寸结果（只读，AutoSize 时由内容算得）")]
+        public Vector2 AutoSizeSize = Vector2.zero;
+
+        [Header("调试")]
+        public bool ShowDisplayRect = false; // 是否用矩形框标出设定的显示区域 (DisplayRect)
+        public bool ShowTextRect = false;    // 是否用矩形框标出实际字体渲染像素包围盒
+
+        private Rect _textBoundsLocal; // 文字实际像素包围盒（buf 本地坐标，row 0 在底）
+
         private Texture2D _tex;
+        private Texture2D _whiteTex; // 1x1 白色像素，用于绘制矩形框
 
         // 缓存上次渲染参数，用于判断是否需要重绘
         private string _cText;
@@ -66,12 +76,29 @@ namespace KUISystem
             if (string.IsNullOrEmpty(Text)) return;
 
             // 字体兜底：未拖入 FontAsset 时按 FontName 从 Resources 加载
-            UFont font = FontAsset != null ? FontAsset : KTextCommon.Load();
+            if(FontAsset == null)
+            {
+                FontAsset = KTextCommon.LoadDefault();
+            }
+
+            UFont font = FontAsset;
             if (font == null) return;
             int fontSize = FontSize > 0 ? FontSize : 16;
 
             int clipW, clipH;
             Rect drawRect;
+
+            // 文本实际尺寸（用于 AutoSize 与 ShowTextRect）。Wrap 时按 DisplayRect.width 约束测量，
+            // Overflow 时按超长测量，得到真实文字包围盒 (measured.x = 最宽行宽, measured.y = 总行高)。
+            Vector2 measured = Vector2.zero;
+            if (AutoSize || ShowTextRect)
+            {
+                int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
+                    ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
+                    : 100000;
+                measured = KText.MeasureText(Text, font, fontSize, FontStyle,
+                    measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
+            }
 
             if (!AutoSize)
             {
@@ -82,17 +109,12 @@ namespace KUISystem
             else
             {
                 // 自动尺寸：宽度受 DisplayRect 限制（Wrap 时），高度按内容增长
-                int measureMaxW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
-                    ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
-                    : 100000;
-                Vector2 measured = KText.MeasureText(Text, font, fontSize, FontStyle,
-                    measureMaxW, Alignment, HorizontalOverflow, VerticalOverflow);
-
                 clipW = (HorizontalOverflow == HorizontalWrapMode.Wrap)
                     ? Mathf.Max(1, Mathf.RoundToInt(DisplayRect.width))
                     : Mathf.Max(1, Mathf.CeilToInt(measured.x));
                 clipH = Mathf.Max(1, Mathf.CeilToInt(measured.y));
                 drawRect = new Rect(DisplayRect.x, DisplayRect.y, clipW, clipH);
+                AutoSizeSize = new Vector2(clipW, clipH);
             }
 
             bool dirty = _tex == null
@@ -129,6 +151,26 @@ namespace KUISystem
                 _tex.LoadRawTextureData(buf);
                 _tex.Apply(false);
 
+                // 扫描渲染结果，得到文字实际像素包围盒（本地坐标，row 0 在底部）
+                int minX = clipW, maxX = -1, minY = clipH, maxY = -1;
+                for (int row = 0; row < clipH; row++)
+                {
+                    int rowBase = row * clipW * 4;
+                    for (int col = 0; col < clipW; col++)
+                    {
+                        if (buf[rowBase + col * 4 + 3] > 0)
+                        {
+                            if (col < minX) minX = col;
+                            if (col > maxX) maxX = col;
+                            if (row < minY) minY = row;
+                            if (row > maxY) maxY = row;
+                        }
+                    }
+                }
+                _textBoundsLocal = (maxX >= 0)
+                    ? new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1)
+                    : new Rect(0, 0, 0, 0);
+
                 _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
                 _cColor = TextColor; _cAnchor = Alignment; _cHWrap = HorizontalOverflow;
                 _cVWrap = VerticalOverflow; _cW = clipW; _cH = clipH;
@@ -139,12 +181,55 @@ namespace KUISystem
             GUI.color = Color.white;
             GUI.DrawTexture(drawRect, _tex);
             GUI.color = prev;
+
+            // 调试：用矩形框标出两类边界（在 Inspector 分别勾选开启）
+            //   显示区域框 (DisplayRect) —— 青色：你设定的显示区域
+            //   实际字体尺寸框 (textRect) —— 黄色：文字真实包围盒 (measured.x × measured.y)，按对齐定位
+            if ((ShowDisplayRect || ShowTextRect) && _tex != null)
+            {
+                if (_whiteTex == null)
+                {
+                    _whiteTex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                    _whiteTex.SetPixel(0, 0, Color.white);
+                    _whiteTex.Apply();
+                    _whiteTex.hideFlags = HideFlags.HideAndDontSave;
+                }
+                float t = 2f;
+                if (ShowDisplayRect)
+                {
+                    GUI.color = Color.cyan;
+                    DrawRectOutline(DisplayRect, t);
+                }
+                if (ShowTextRect)
+                {
+                    // 用渲染时扫描得到的真实像素包围盒（与文字实际落位完全一致，适配任意对齐/折行）
+                    // 注意：GUI.DrawTexture 按纹理约定，buf row 0 对应矩形底部，故垂直需翻转；水平不变。
+                    Rect textRect = new Rect(
+                        drawRect.x + _textBoundsLocal.x,
+                        drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
+                        _textBoundsLocal.width,
+                        _textBoundsLocal.height);
+                    GUI.color = Color.yellow;
+                    DrawRectOutline(textRect, t);
+                }
+                GUI.color = Color.white;
+            }
+        }
+
+        /// <summary>用 1x1 白像素贴图绘制矩形边框（4 条边）。</summary>
+        private void DrawRectOutline(Rect r, float thickness)
+        {
+            GUI.DrawTexture(new Rect(r.x, r.y, r.width, thickness), _whiteTex);
+            GUI.DrawTexture(new Rect(r.x, r.y + r.height - thickness, r.width, thickness), _whiteTex);
+            GUI.DrawTexture(new Rect(r.x, r.y, thickness, r.height), _whiteTex);
+            GUI.DrawTexture(new Rect(r.x + r.width - thickness, r.y, thickness, r.height), _whiteTex);
         }
 
         /// <summary>释放内部贴图（组件退出时自动调用）。</summary>
         public void Release()
         {
             if (_tex != null) { DestroyImmediate(_tex); _tex = null; }
+            if (_whiteTex != null) { DestroyImmediate(_whiteTex); _whiteTex = null; }
         }
 
         private void OnDisable() { Release(); }

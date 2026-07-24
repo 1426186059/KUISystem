@@ -74,7 +74,7 @@ namespace KText.Editor
 
                 using (new EditorGUI.DisabledScope(_font == null))
                 {
-                    if (GUILayout.Button("保存图集到 KText/Temp", GUILayout.Height(28)))
+                    if (GUILayout.Button("保存图集到 KUISystem/Temp", GUILayout.Height(28)))
                         SaveFontAtlas(_font);
                 }
             }
@@ -163,7 +163,7 @@ namespace KText.Editor
             }
 
             // 保存到 Assets/KText/Temp
-            string outputDir = Path.Combine(Application.dataPath, "KText", "Temp");
+            string outputDir = Path.Combine(Application.dataPath, "KUISystem", "Temp");
             Directory.CreateDirectory(outputDir);
 
             string outputPath = Path.Combine(
