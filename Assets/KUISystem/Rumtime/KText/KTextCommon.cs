@@ -45,16 +45,9 @@ namespace KUISystem
             return f ?? DefaultFont;
         }
 
-        private static UFont InnerLoadFont(string name = null, int FontSize = 0)
+        private static UFont InnerLoadFont(string name = null)
         {
             UFont f = null;
-            string[] fontNames = Font.GetOSInstalledFontNames();
-            if (fontNames != null && fontNames.Contains(name))
-            {
-                f = Font.CreateDynamicFontFromOSFont(name, FontSize);
-                Debug.Log("Current Load OSFont: " + f.name);
-            }
-
             if (f == null)
             {
                 f = Resources.Load<UFont>("Fonts/" + name);
