@@ -168,13 +168,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Text: "KText \u7B2C\u4E09\u65B9\u5220\u6389\u58EB\u5927\u592B\u90FD\u662F\u7B2C\u4E09\u65B9\u662F\u7684\u4E3A\u58EB\u5927\u592B\u58EB\u5927\u592B
     \u58EB\u5927\u592B"
-  FontAsset: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  FontAsset: {fileID: 12800000, guid: 41d2dab859f1fd540b181fec9f1f024c, type: 3}
   FontSize: 40
   FontStyle: 0
   TextColor: {r: 0.81906796, g: 0.9245283, b: 0.11774653, a: 1}
   Alignment: 1
   HorizontalOverflow: 0
   VerticalOverflow: 1
+  LineHeightCoef: 1
+  YOffset: 0
   DisplayRect:
     serializedVersion: 2
     x: 367.1
@@ -183,20 +185,20 @@ MonoBehaviour:
     height: 500
   AutoSize: 0
   ShowDisplayRect: 1
-  ShowPixelRect: 1
-  ShowActualSizeRect: 1
+  ShowPixelRect: 0
+  ShowActualSizeRect: 0
   ActualSize:
     serializedVersion: 2
     x: 366.1
-    y: 509
-    width: 400
-    height: 184
+    y: 470
+    width: 402
+    height: 157
   PixelRect:
     serializedVersion: 2
     x: 366.1
-    y: 509
+    y: 470
     width: 402
-    height: 175
+    height: 157
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
