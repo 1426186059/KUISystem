@@ -52,7 +52,7 @@ namespace KText.Example
             string key = (FontAsset != null ? "asset" : "name:" + FontName) + ":" + FontSize;
             if (_cachedFont == null || _cachedFontKey != key)
             {
-                _cachedFont = FontAsset != null ? FontAsset : KTextCommon.Load(FontName, FontSize);
+                _cachedFont = FontAsset != null ? FontAsset : KTextCommon.Load(FontName);
                 _cachedFontKey = key;
             }
             return _cachedFont;

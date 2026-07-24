@@ -26,14 +26,14 @@ namespace KUISystem
         /// 按名称加载字体。优先从 Resources/Fonts/ 加载，找不到则返回默认字体。
         /// 结果会缓存到 _fontCache。
         /// </summary>
-        public static UFont Load(string name = null, int FontSize = 30)
+        public static UFont Load(string name = null)
         {
             UFont f = null;
             if (!string.IsNullOrEmpty(name))
             {
                 if (!_fontCache.TryGetValue(name, out f))
                 {
-                    f = InnerLoadFont(name, FontSize);
+                    f = InnerLoadFont(name);
                     if (f != null)
                     {
                         Debug.Log("Current Load Font: " + f.name);

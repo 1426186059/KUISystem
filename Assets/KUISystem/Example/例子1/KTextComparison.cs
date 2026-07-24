@@ -55,7 +55,7 @@ namespace KText.Example
 
         private void OnGUI()
         {
-            UFont font = FontAsset != null ? FontAsset : KTextCommon.Load(FontName, FontSize);
+            UFont font = FontAsset != null ? FontAsset : KTextCommon.Load(FontName);
             if (font == null) return;
 
             GUI.Label(new Rect(30, 10, 820, 30), "KText 两种 Unity 上屏方式对比（底层都是 KText 核心渲染）");

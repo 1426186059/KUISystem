@@ -108,6 +108,24 @@ namespace KUISystem
             return 0;
         }
 
+        // 基于字形墨迹复现 WinForm/GDI 的垂直度量（DrawText 与 MeasureTextSize 共用，保证渲染与测量一致）。
+        // 严禁依赖 font.ascent/lineHeight/fontSize：KTextCommon.Load 用固定 30pt 创建动态字体，这三个属性基准是 30pt，
+        // 与绘制尺寸（如 8pt）混用会让 internalLeading 算成几十像素，字被推到 buffer 外、严重下沉（"太靠下"）。
+        // GDI DrawText(DT_TOP)：基线 = bounds.top + tmAscent，tmAscent = tmInternalLeading + 字形墨迹顶，
+        // 即字形墨迹顶到行盒顶留 internal leading 空白（Arial 等字体很小，约 10% em）、底部留 descent 空白。
+        // 这里全部基于绘制尺寸的墨迹度量：emTop=max(maxY)，emBottom=max(-minY)，emHeight=emTop+emBottom；
+        //      internalLeading 取 emHeight 的小比例（上限 1px，贴近 Arial 这类几乎无 internal leading 的字体）；
+        //      tmHeight = emHeight + internalLeading；ascent = emTop + internalLeading（≈ tmAscent）。
+        private static void ComputeFontMetrics(Font font, int fontSize, int emTop, int emBottom,
+            out int outAscent, out int outLineHeight)
+        {
+            int emHeight = emTop + emBottom;
+            int internalLeading = Mathf.Max(1, Mathf.RoundToInt(emHeight * 0.1f)); // 仅绘制尺寸的小留白，避免太靠下
+            int tmHeight = emHeight + internalLeading;
+            outAscent = emTop + internalLeading;
+            outLineHeight = tmHeight;
+        }
+
         //这里得到的是 基线 Y 位置
         // nAscent：含 internal leading 的基线偏移（= font.ascent，详见 WinForm/GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
         //          令 baseline = T0 - nAscent，则 字形墨迹顶留白 = nAscent - maxY = internal leading，
@@ -212,25 +230,19 @@ namespace KUISystem
                     _charInfoCache.Add(default);
             }
 
-            // 用字体真实度量（含 internal leading / 行间距）定位，与 WinForm/GDI 一致：
-            // GDI DrawText(DT_TOP) 将基线放在 距顶 tmAscent 处（tmAscent = tmInternalLeading + 字形墨迹高度），
-            // 故字形墨迹顶留白 = internal leading，字整体偏下。这里取 font.ascent / font.lineHeight 等价之。
-            float fontScale = (font.fontSize > 0) ? (float)fontSize / font.fontSize : 1f;
-            int realAscent = Mathf.RoundToInt(font.ascent * fontScale);
-            int realLineHeight = Mathf.RoundToInt(font.lineHeight * fontScale);
-            if (realAscent <= 0 || realLineHeight <= 0)
+            // 基于字形墨迹复现 WinForm/GDI 的垂直定位（不依赖 font.ascent/lineHeight/fontSize，
+            // 这三个属性对动态字体在运行时不可靠，会返回 0 或基准尺寸错误，导致回退回 fontSize）。
+            // GDI DrawText(DT_TOP)：基线 = bounds.top + tmAscent，tmAscent = tmInternalLeading + 字形墨迹顶。
+            // 即字形墨迹顶到行盒顶留 internal leading 空白、底部留 descent 空白 —— 字整体偏下（偏低）。
+            int emTop = 0, emBottom = 0;
+            for (int ci = 0; ci < _charInfoCache.Count; ci++)
             {
-                // 回退：用字形墨迹估算（动态字体等取不到度量时保证可用）
-                int mAscent = fontSize, mDescent = 0;
-                for (int ci = 0; ci < _charInfoCache.Count; ci++)
-                {
-                    var cc = _charInfoCache[ci];
-                    if (cc.maxY > mAscent) mAscent = cc.maxY;
-                    if (-cc.minY > mDescent) mDescent = -cc.minY;
-                }
-                realAscent = mAscent;
-                realLineHeight = Mathf.Max(mAscent + mDescent, fontSize);
+                var cc = _charInfoCache[ci];
+                if (cc.maxY > emTop) emTop = cc.maxY;
+                if (-cc.minY > emBottom) emBottom = -cc.minY;
             }
+            int realAscent, realLineHeight;
+            ComputeFontMetrics(font, fontSize, emTop, emBottom, out realAscent, out realLineHeight);
 
             int totalLines = 0;
             {
@@ -425,20 +437,16 @@ namespace KUISystem
                     _charInfoCache.Add(default);
             }
 
-            // 与 DrawText 保持一致，用字体真实行高（含行间距）累加，确保测量尺寸与渲染位置对齐
-            float fontScale = (font.fontSize > 0) ? (float)fontSize / font.fontSize : 1f;
-            int realLineHeight = Mathf.RoundToInt(font.lineHeight * fontScale);
-            if (realLineHeight <= 0)
+            // 与 DrawText 共用同一套垂直度量（ComputeFontMetrics），确保测量尺寸与渲染位置一致
+            int emTop = 0, emBottom = 0;
+            for (int ci = 0; ci < _charInfoCache.Count; ci++)
             {
-                int mAscent = fontSize, mDescent = 0;
-                for (int ci = 0; ci < _charInfoCache.Count; ci++)
-                {
-                    var cc = _charInfoCache[ci];
-                    if (cc.maxY > mAscent) mAscent = cc.maxY;
-                    if (-cc.minY > mDescent) mDescent = -cc.minY;
-                }
-                realLineHeight = Mathf.Max(mAscent + mDescent, fontSize);
+                var cc = _charInfoCache[ci];
+                if (cc.maxY > emTop) emTop = cc.maxY;
+                if (-cc.minY > emBottom) emBottom = -cc.minY;
             }
+            int _ascentUnused, realLineHeight;
+            ComputeFontMetrics(font, fontSize, emTop, emBottom, out _ascentUnused, out realLineHeight);
 
             float curX = 0, curY = 0, maxW = 0;
             int lineStart = 0;
