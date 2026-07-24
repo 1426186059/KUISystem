@@ -110,11 +110,11 @@ namespace KUISystem
 
         // 行高用系数（乘 fontSize），行内基线偏移用相加（像素），由调用方传入，不再依赖字体度量本身。
         //   nLineHeight = fontSize * lineHeightCoef（行高，乘 fontSize）
-        //   nAscent     = 字形墨迹顶 inkTop + yOffset（基线相对行顶偏移，单位像素，直接相加；对应 GDI 的 tmAscent）
+        //   nAscent     = fontSize + yOffset（基线相对行顶偏移，单位像素，直接相加；对应 GDI 的 tmAscent）
         // 即可通过参数统一配置所有字体的垂直布局。
 
         //这里得到的是 基线 Y 位置
-        // nAscent：基线相对行顶的偏移（= 字形墨迹顶 inkTop + yOffset，单位像素，直接相加；对应 GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
+        // nAscent：基线相对行顶的偏移（= fontSize + yOffset，单位像素，直接相加；对应 GDI 的 tmAscent = tmInternalLeading + 字形墨迹高度）。
         //          令 baseline = T0 - nAscent，则 字形墨迹顶留白 = nAscent - maxY = internal leading，
         //          与 WinForm/GDI（DrawText DT_TOP）一致：字整体下沉、顶部留白，而非贴顶。
         // nLineHeight：行高（= fontSize * lineHeightCoef，含行间距），多行间距按此累加。
@@ -224,9 +224,9 @@ namespace KUISystem
 
             // 行高用系数（乘 fontSize），行内基线偏移用相加（像素）：
             //   nLineHeight = fontSize * lineHeightCoef（行高，乘）
-            //   nAscent     = 字形墨迹顶(inkTop) + yOffset（基线相对行顶偏移，单位像素，直接相加；yOffset 默认 0 = 字形贴行顶）
-            int realAscent     = Mathf.RoundToInt(yOffset);
+            //   nAscent     = fontSize + yOffset（基线相对行顶偏移，单位像素，直接相加；yOffset 默认 0 = 顶部留约 0.2em 空隙）
             int realLineHeight = Mathf.RoundToInt(fontSize * lineHeightCoef);
+            int realAscent = fontSize + Mathf.RoundToInt(yOffset);
 
             int totalLines = 0;
             {

@@ -166,8 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Text: "KText \u7B2C\u4E09\u65B9\u5220\u6389\u58EB\u5927\u592B\u90FD\u662F\u7B2C\u4E09\u65B9\u662F\u7684\u4E3A\u58EB\u5927\u592B\u58EB\u5927\u592B
-    \u58EB\u5927\u592B"
+  Text: "KText \u7B2C\u4E09\u65B9\u5220\u6389\u58EB\u5927\u592B\u90FD\u662F\u7B2C\u4E09\u65B9\u662F\u7684\u4E3A\u58EB\u5927\u592B\u58EB\u5927\u592B\u58EB\u5927\u592B"
   FontAsset: {fileID: 12800000, guid: 41d2dab859f1fd540b181fec9f1f024c, type: 3}
   FontSize: 40
   FontStyle: 0
@@ -186,17 +185,17 @@ MonoBehaviour:
   AutoSize: 0
   ShowDisplayRect: 1
   ShowPixelRect: 0
-  ShowActualSizeRect: 0
+  ShowActualSizeRect: 1
   ActualSize:
     serializedVersion: 2
     x: 366.1
-    y: 470
+    y: 510
     width: 402
     height: 157
   PixelRect:
     serializedVersion: 2
     x: 366.1
-    y: 470
+    y: 510
     width: 402
     height: 157
 --- !u!1 &2001
