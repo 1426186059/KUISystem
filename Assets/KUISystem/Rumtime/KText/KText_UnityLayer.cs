@@ -54,9 +54,9 @@ namespace KUISystem
         [Tooltip("青色框：标出设定的显示区域 DisplayRect")]
         public bool ShowDisplayRect = false;
         [Tooltip("黄色框：实际像素尺寸（扫描像素 buffer，非测量）")]
-        public bool ShowTextRect = false;
+        public bool ShowPixelRect = false;
         [Tooltip("绿色框：实际绘制区域（来自 MeasureText 测量，仅 Editor 下生效）")]
-        public bool ShowAutoSizeRect = false;
+        public bool ShowActualSizeRect = false;
 
         private Rect _textBoundsLocal;   // 文字实际像素包围盒（buf 本地坐标，row 0 在底）
         private Texture2D _whiteTex;     // 1x1 白色像素，用于绘制矩形框
@@ -118,8 +118,12 @@ namespace KUISystem
             }
 
 #if UNITY_EDITOR
-            // 实际尺寸（与 AutoSize 无关）：位置取 DisplayRect 左上角，尺寸取文字真实测量值
-            ActualSize = new Rect(DisplayRect.x, DisplayRect.y, measured.x, measured.y);
+            // 实际尺寸（与 AutoSize 无关）：尺寸取文字真实测量值，位置跟随文字实际落位
+            // （复用渲染扫描得到的 _textBoundsLocal，使绿框在任何对齐方式下都贴合文字）
+            ActualSize = new Rect(
+                drawRect.x + _textBoundsLocal.x,
+                drawRect.y + drawRect.height - (_textBoundsLocal.y + _textBoundsLocal.height),
+                measured.x, measured.y);
 #endif
 
             bool dirty = _tex == null
@@ -148,34 +152,17 @@ namespace KUISystem
                 for (int i = 0; i < buf.Length; i += 4)
                 { buf[i] = 0; buf[i + 1] = 0; buf[i + 2] = 0; buf[i + 3] = 0; }
 
-                // 用 KText 核心（CPU 光栅化）渲染到 BGRA buffer
+                // 用 KText 核心（CPU 光栅化）渲染到 BGRA buffer，并直接取回真实渲染包围盒（buffer 本地坐标，row 0 在底）
                 KText.DrawText(buf, clipW, clipH, clipW * 4,
                     Text, font, fontSize, FontStyle,
-                    0, 0, clipW, clipH, TextColor, Alignment, HorizontalOverflow, VerticalOverflow);
+                    0, 0, clipW, clipH, TextColor, Alignment, HorizontalOverflow, VerticalOverflow,
+                    out Rect drawnBounds);
 
                 _tex.LoadRawTextureData(buf);
                 _tex.Apply(false);
 
 #if UNITY_EDITOR
-                // 扫描渲染结果，得到文字实际像素包围盒（本地坐标，row 0 在底部）—— 仅 Editor 下 ShowTextRect 用
-                int minX = clipW, maxX = -1, minY = clipH, maxY = -1;
-                for (int row = 0; row < clipH; row++)
-                {
-                    int rowBase = row * clipW * 4;
-                    for (int col = 0; col < clipW; col++)
-                    {
-                        if (buf[rowBase + col * 4 + 3] > 0)
-                        {
-                            if (col < minX) minX = col;
-                            if (col > maxX) maxX = col;
-                            if (row < minY) minY = row;
-                            if (row > maxY) maxY = row;
-                        }
-                    }
-                }
-                _textBoundsLocal = (maxX >= 0)
-                    ? new Rect(minX, minY, maxX - minX + 1, maxY - minY + 1)
-                    : new Rect(0, 0, 0, 0);
+                _textBoundsLocal = drawnBounds;
 #endif
 
                 _cText = Text; _cFont = font; _cFontSize = fontSize; _cStyle = FontStyle;
@@ -191,10 +178,10 @@ namespace KUISystem
 
 #if UNITY_EDITOR
             // 调试：用矩形框标出边界（仅 Editor）
-            //   实际尺寸框 (ActualSize) —— 绿色：实际绘制区域（位置+尺寸），勾选 ShowAutoSizeRect 时显示
+            //   实际尺寸框 (ActualSize) —— 绿色：实际绘制区域（位置+尺寸），勾选 ShowActualSizeRect 时显示
             //   显示区域框 (DisplayRect) —— 青色：你设定的显示区域，勾选 ShowDisplayRect 时显示
-            //   实际像素尺寸框 (_textBoundsLocal) —— 黄色：文字真实像素包围盒，勾选 ShowTextRect 时显示
-            if (_tex != null && (ShowDisplayRect || ShowTextRect || ShowAutoSizeRect))
+            //   实际像素尺寸框 (_textBoundsLocal) —— 黄色：文字真实像素包围盒，勾选 ShowPixelRect 时显示
+            if (_tex != null && (ShowDisplayRect || ShowPixelRect || ShowActualSizeRect))
             {
                 if (_whiteTex == null)
                 {
@@ -204,7 +191,7 @@ namespace KUISystem
                     _whiteTex.hideFlags = HideFlags.HideAndDontSave;
                 }
                 float t = 2f;
-                if (ShowAutoSizeRect)
+                if (ShowActualSizeRect)
                 {
                     GUI.color = Color.green;
                     DrawRectOutline(ActualSize, t);
@@ -214,7 +201,7 @@ namespace KUISystem
                     GUI.color = Color.cyan;
                     DrawRectOutline(DisplayRect, t);
                 }
-                if (ShowTextRect)
+                if (ShowPixelRect)
                 {
                     // 用渲染时扫描得到的真实像素包围盒（与文字实际落位完全一致，适配任意对齐/折行）
                     // 注意：GUI.DrawTexture 按纹理约定，buf row 0 对应矩形底部，故垂直需翻转；水平不变。

@@ -46,7 +46,8 @@ namespace KUISystem
             int nLineIndex, int nLineCount, float nRowMaxWidth, float nRowNowLength,
             ReadOnlySpan<Color32> atlasPixels, int nAtlasWidth, int nAtlasHeight,
             Span<Color32> targetPixels_BGRA, int targetPixels_Width, int targetPixels_Height,
-            int x, int y, int clipW, int clipH)
+            int x, int y, int clipW, int clipH,
+            ref float bMinX, ref float bMinY, ref float bMaxX, ref float bMaxY)
         {
             int nQuadWidth = info.maxX - info.minX;
             int nQuadHeight = info.maxY - info.minY;
@@ -63,6 +64,14 @@ namespace KUISystem
             int targetBaseLineY = GetContentBeginBaseLineY(clipH, anchor, nFontSize, nContentHeight, nBaseLineOffset);
             int targetBottomLeftX = nBeginLinePosX + Mathf.RoundToInt(nRowNowLength) + info.minX + x;
             int targetBottomLeftY = targetBaseLineY + info.minY + y;
+
+            // 累计文字真实渲染包围盒（buffer 本地坐标，row 0 在底）
+            int gRight = targetBottomLeftX + (info.maxX - info.minX);
+            int gTop = targetBottomLeftY + (info.maxY - info.minY);
+            if (targetBottomLeftX < bMinX) bMinX = targetBottomLeftX;
+            if (gRight > bMaxX) bMaxX = gRight;
+            if (targetBottomLeftY < bMinY) bMinY = targetBottomLeftY;
+            if (gTop > bMaxY) bMaxY = gTop;
 
             for (int i = 0; i < nQuadHeight; i++)
             {
@@ -133,6 +142,7 @@ namespace KUISystem
         // ================================================================
 
         //读取像素到目标 纹理 buf，此buf是 BGRA 纹理buf
+        // 兼容旧调用：不输出包围盒
         public static void DrawText(
             byte[] buf, int bufW, int bufH, int stride,
             string text, UFont font, int fontSize, UFontStyle style,
@@ -142,6 +152,24 @@ namespace KUISystem
             HorizontalWrapMode hWrap = HorizontalWrapMode.Wrap,
             VerticalWrapMode vWrap = VerticalWrapMode.Overflow)
         {
+            Rect ignore;
+            DrawText(buf, bufW, bufH, stride, text, font, fontSize, style,
+                x, y, clipW, clipH, color, anchor, hWrap, vWrap, out ignore);
+        }
+
+        // 实现版：额外输出文字真实渲染包围盒（buffer 本地坐标，row 0 在底）
+        public static void DrawText(
+            byte[] buf, int bufW, int bufH, int stride,
+            string text, UFont font, int fontSize, UFontStyle style,
+            int x, int y, int clipW, int clipH,
+            Color color,
+            TextAnchor anchor,
+            HorizontalWrapMode hWrap,
+            VerticalWrapMode vWrap,
+            out Rect bounds)
+        {
+            bounds = Rect.zero;
+            float bMinX = float.MaxValue, bMinY = float.MaxValue, bMaxX = float.MinValue, bMaxY = float.MinValue;
             if(font == null)
             {
                 UnityEngine.Debug.LogError("font == null");
@@ -280,8 +308,9 @@ namespace KUISystem
 
                     FillQuadTexture(info, c32, anchor, fontSize,
                         nLineIndex, nLineCount, mList_LineMaxWidth[nLineIndex], nRowNowLength,
-                         atlasPixels, atlasW, atlasH,
-                         targetBuf, clipW, clipH, x, y, clipW, clipH);
+                        atlasPixels, atlasW, atlasH,
+                        targetBuf, clipW, clipH, x, y, clipW, clipH,
+                        ref bMinX, ref bMinY, ref bMaxX, ref bMaxY);
 
                     nRowNowLength += info.advance;
                 }
@@ -303,6 +332,9 @@ namespace KUISystem
                         lineStart = lineEnd;
                 }
             }
+
+            if (bMaxX >= bMinX && bMaxY >= bMinY)
+                bounds = new Rect(bMinX, bMinY, bMaxX - bMinX, bMaxY - bMinY);
         }
 
         // ================================================================

@@ -166,12 +166,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aceb700a49ba10042a8ee922a8ceb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Text: "KText \u7684 \u7684\u53D1\u53D1\u53D1\u5730\u65B9\u5730\u65B9\u5730\u65B9\u7684\u653E\u5230\u5730\u65B9\u5730\u65B9"
+  Text: KText
   FontAsset: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
   FontSize: 30
   FontStyle: 0
   TextColor: {r: 0.81906796, g: 0.9245283, b: 0.11774653, a: 1}
-  Alignment: 4
+  Alignment: 1
   HorizontalOverflow: 0
   VerticalOverflow: 1
   DisplayRect:
@@ -179,17 +179,17 @@ MonoBehaviour:
     x: 367.1
     y: 500
     width: 400
-    height: 319
-  AutoSize: 1
+    height: 500
+  AutoSize: 0
   ActualSize:
     serializedVersion: 2
-    x: 367.1
-    y: 500
-    width: 394
-    height: 90
+    x: 530.1
+    y: 507
+    width: 78
+    height: 30
   ShowDisplayRect: 1
-  ShowTextRect: 0
-  ShowAutoSizeRect: 1
+  ShowPixelRect: 0
+  ShowActualSizeRect: 0
 --- !u!1 &2001
 GameObject:
   m_ObjectHideFlags: 0
