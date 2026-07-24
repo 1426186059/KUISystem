@@ -45,6 +45,8 @@ namespace KUISystem
             return f ?? DefaultFont;
         }
 
+        //不要使用  Font.CreateDynamicFontFromOSFont(name, FontSize);
+        //系统字体会有很大差异
         private static UFont InnerLoadFont(string name = null)
         {
             UFont f = null;
